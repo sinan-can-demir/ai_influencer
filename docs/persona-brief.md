@@ -63,32 +63,38 @@ working through — not a constant engagement-bait stream.
 
 ## Visual spec
 
-- **Style:** soft/pastel semi-3D CGI render, warm lighting. Stays inside
-  the "stylized/CGI digital being" lane (not photoreal, not flat
-  illustration) — chosen over a cleaner/colder Miquela-style render because
-  it fits an earnest, gentle personality better, is more forgiving to keep
-  consistent across generations than harder photoreal, and is less of an
-  already-cloned look in the virtual-influencer space.
-- **Fixed traits (to nail down further before Phase 2, first pass):**
-  warm/pastel palette anchored by soft sage green + cream; a small
-  recurring visual motif tying to the "growing" theme (candidate: a tiny
-  sprout/plant detail — hair clip, pin, or something she's often shown
-  with); hair and eye color still open — proposing soft copper/auburn wavy
-  hair with warm brown eyes as a starting point, easy to change before
-  we lock a reference sheet.
-- **Real-world references:** none specified yet — worth spending 20 minutes
-  gathering 5-10 reference images (existing virtual influencers, character
-  art, even color-palette references) before Phase 2 starts, so the image
-  pipeline has something concrete to imitate rather than working from text
-  description alone.
+- **Style (revised from original plan):** warm painterly digital
+  illustration — semi-realistic digital painting, soft rendered shading,
+  not flat/cartoon 2D and not literal 3D-CGI-render, not photoreal. The
+  original brief called for a "3D CGI render" look; the bootstrap
+  generation batch (10 images, same prompt) converged consistently on this
+  painterly-illustration direction instead, and it fits the earnest/gentle
+  personality just as well — adopting what was actually achieved as canon
+  rather than fighting the prompt back toward the original wording.
+- **Fixed traits (locked, confirmed across a 10-image bootstrap batch):**
+  warm/pastel palette anchored by soft sage green + cream; recurring visual
+  motif is a small leaf/sprout detail — realized as a hair clip plus
+  matching leaf earrings and a leaf pendant necklace, tying into her
+  "growing" theme; soft copper/auburn wavy hair; warm brown eyes; light
+  freckles; warm, gentle smile.
+- **Reference images:** locked — 10 images in `assets/reference/`,
+  generated (not sourced) to bootstrap her identity from scratch, since she's
+  an original character rather than a lookalike of something pre-existing.
+  All 10 share close-up bust-portrait framing with similar angle/expression
+  — strong for confirming identity consistency, but may need a few
+  varied-angle/pose additions later if Phase 2 multi-reference generation
+  struggles to generalize beyond frontal shots (revisit if/when that
+  becomes a real problem, not preemptively).
 
 ## Still open / revisit before Phase 2
 
-- Confirm or change hair/eye color and the recurring motif.
-- Gather actual reference images for the visual style.
-- Decide her very first post (the actual "activation" moment) — this sets
-  the tone for the whole arc and is worth writing deliberately rather than
-  generating it cold.
+Nothing blocking — visual spec and reference images are both locked. Only
+the optional varied-angle reference addition noted above remains, and only
+if it turns out to be needed.
+
+~~Decide her very first post~~ — overtaken by events: she's already live
+and posting (Bluesky, `junogrows.bsky.social`), organically rather than as
+a deliberately pre-planned "activation moment." Not revisited retroactively.
 
 ## Why this doc matters technically
 

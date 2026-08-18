@@ -73,14 +73,26 @@ consistency, context windows, why "memory" for an LLM app is usually just
 
 Now give the persona a consistent face/look for images.
 
-- [ ] Decide the concrete visual spec from the persona brief (this is a
-      prerequisite input, not a code task).
-- [ ] Prototype character consistency with a hosted diffusion API (e.g.
-      Replicate or Fal.ai running SDXL/Flux) using a fixed reference image +
-      image-to-image or IP-Adapter — cheaper and faster to iterate on than
-      training a LoRA.
-- [ ] If consistency isn't good enough, escalate to training a small LoRA on
-      a curated reference set of the character.
+- [x] Decide the concrete visual spec from the persona brief — locked in
+      docs/persona-brief.md. Revised from the original "3D CGI render" plan
+      to warm painterly digital illustration (sage green + cream,
+      copper/auburn wavy hair, warm brown eyes, leaf/sprout motif) after
+      the bootstrap batch consistently converged there instead.
+- [x] Gather 5-10 reference images matching the locked spec — done. 10
+      images generated (not sourced) to bootstrap her identity from
+      scratch, in `assets/reference/`. These double as the actual
+      multi-reference input for generation, not just style inspiration.
+- [ ] Prototype character consistency via **fal.ai** (chosen over
+      Replicate: ~30-50% cheaper, single-digit-second cold starts vs.
+      Replicate's 10-120s, predictable per-image billing) using **FLUX 2's
+      multi-reference system** — fuses up to 10 reference images into one
+      identity, holds up better across poses/angles than single-image
+      IP-Adapter or Flux Redux (both still weak on e.g. profile shots from
+      a frontal reference). This replaces the original single-reference
+      IP-Adapter plan as the first thing to try, not just a fallback.
+- [ ] If multi-reference consistency isn't good enough, escalate to
+      training a small LoRA on the curated reference set (unchanged
+      fallback plan).
 - [ ] Wire image generation into the draft-review script from Phase 1, so a
       draft is (text, image) reviewed together.
 
