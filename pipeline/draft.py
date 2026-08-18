@@ -2,6 +2,7 @@
 
 from groq import Groq
 from persona import SYSTEM_PROMPT
+from history import get_recent_posts
 from dotenv import load_dotenv
 from datetime import date
 import os
@@ -17,12 +18,14 @@ def groq_client() -> Groq:
 def generate_draft():
     client = groq_client()
     today = date.today()
+    recent_posts = get_recent_posts()
+    recent_text = "\n".join(recent_posts)
     response = client.chat.completions.create(
         model=DRAFT_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"today is {today}, write today's post"},
-        ],
+            {"role": "user", "content": f"today is {today}. here's what you posted recently:\n{recent_text}\nwrite today's post"}
+            ],
     )
     return response.choices[0].message.content
 

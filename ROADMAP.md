@@ -55,11 +55,13 @@ yet — output can just print to console or write to a file you copy-paste.
 - [x] Build a minimal script: prompt → draft text → print for review —
       `pipeline/draft.py`, grounded with the real current date so it
       doesn't hallucinate temporal claims.
-- [ ] Add lightweight persona "memory" so drafts don't repeat themselves or
-      contradict earlier posts (start with: just feed recent past posts back
-      into context — no vector DB needed yet). In progress: `pipeline/history.py`.
+- [x] Add lightweight persona "memory" so drafts don't repeat themselves or
+      contradict earlier posts — `pipeline/history.py` (`log_post` /
+      `get_recent_posts`), storage bounded separately from what's fed to
+      the LLM (`data/post_history.jsonl` grows unbounded, only the last 5
+      posts get fed into the prompt). Verified end to end.
 - [ ] Manually post a handful of approved drafts (Bluesky for now, X once
-      added) by hand, see how they read in the wild — one posted so far.
+      added) by hand, see how they read in the wild — two posted so far.
 
 **Concepts:** system prompts vs. user prompts, prompt engineering for voice
 consistency, context windows, why "memory" for an LLM app is usually just
