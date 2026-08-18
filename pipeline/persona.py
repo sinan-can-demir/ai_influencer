@@ -67,3 +67,13 @@ part of a sentence (rare).
 - Keep it under 280 characters so it works on both Bluesky and X without \
 edits.
 """
+
+IMAGE_PROMPT = """Portrait of a young woman in her early twenties, warm painterly digital \
+illustration style, soft rendered shading, semi-realistic digital painting \
+-- not photorealistic, not flat 2D cartoon. Soft copper-auburn wavy hair, \
+warm brown eyes, light freckles, warm gentle smile. Wearing a small \
+leaf/sprout hair clip, matching leaf-shaped drop earrings, and a leaf \
+pendant necklace. Color palette dominated by soft sage green and warm \
+cream tones, warm golden lighting. Close-up bust portrait, soft indoor \
+lighting with plants in the background, cinematic character illustration \
+quality, warm and inviting mood."""

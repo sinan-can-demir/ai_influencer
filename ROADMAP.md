@@ -82,17 +82,39 @@ Now give the persona a consistent face/look for images.
       images generated (not sourced) to bootstrap her identity from
       scratch, in `assets/reference/`. These double as the actual
       multi-reference input for generation, not just style inspiration.
-- [ ] Prototype character consistency via **fal.ai** (chosen over
-      Replicate: ~30-50% cheaper, single-digit-second cold starts vs.
-      Replicate's 10-120s, predictable per-image billing) using **FLUX 2's
-      multi-reference system** — fuses up to 10 reference images into one
-      identity, holds up better across poses/angles than single-image
-      IP-Adapter or Flux Redux (both still weak on e.g. profile shots from
-      a frontal reference). This replaces the original single-reference
-      IP-Adapter plan as the first thing to try, not just a fallback.
-- [ ] If multi-reference consistency isn't good enough, escalate to
-      training a small LoRA on the curated reference set (unchanged
-      fallback plan).
+- [x] ~~Google AI Studio / Gemini 2.5 Flash Image~~ — dead end. The
+      account dashboard showed a hard `0/0` rate limit for the image model
+      specifically on the free tier (confirmed: Google pulled free-tier API
+      access to image generation in March 2026, even though free access to
+      Gemini's *text* models and the *consumer app's* image tier are both
+      still real). Billing would be required for any image access at all.
+- [x] Pivoted to **Hugging Face** instead — no card required. Two-step plan:
+  - [x] **Step 1 (done, verified working):** plain text-to-image via
+        `huggingface_hub.InferenceClient`, pinned to `provider="hf-inference"`
+        specifically (avoids "auto" silently routing to a paid third-party
+        provider). Model: `stabilityai/stable-diffusion-3-medium-diffusers`
+        (FLUX.1-dev is NOT available on `hf-inference` — confirmed via HF's
+        own docs, it 410'd when tried; FLUX is only routed through paid
+        providers). Requires a fine-grained token with the specific
+        "Inference Providers" permission checked (a plain read-scoped
+        fine-grained token 403's). Result: correct identity traits
+        (hair/eyes/motif/palette) but a flatter, more generic render style
+        than the bootstrap reference set — expected, since this is a
+        weaker free model with no reference-image conditioning at all yet.
+  - [ ] **Step 2 (in progress):** feed in the actual reference images for
+        real identity-conditioned generation. HF's clean `InferenceClient`
+        doesn't support this on the free tier either — the `image-to-image`
+        task is *only* mapped to paid providers, `hf-inference` isn't even
+        listed. Remaining free path: call a community **Space** running
+        IP-Adapter or similar directly via `gradio_client`, on free ZeroGPU
+        compute. Avoid FaceID-specific variants (e.g. IP-Adapter-FaceID) —
+        those run real-face-recognition embeddings and are a poor match for
+        Juno's painterly illustration style. Evaluating
+        `black-forest-labs/flux-klein-9b-kv` (official org, confirmed
+        running on ZeroGPU) as a candidate — need to check its actual
+        Gradio "Use via API" panel before committing to it.
+- [ ] If Step 2 consistency isn't good enough, escalate to training a
+      small LoRA on the curated reference set (unchanged fallback plan).
 - [ ] Wire image generation into the draft-review script from Phase 1, so a
       draft is (text, image) reviewed together.
 
