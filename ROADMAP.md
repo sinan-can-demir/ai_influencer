@@ -95,6 +95,17 @@ Replace "print to console" with something you'd actually want to use daily.
 - [ ] Basic logging: what was posted, when, and the draft that produced it
       (a flat file or SQLite is enough — no need for a real database yet).
 
+**Ideas to consider for this phase (not committed to yet):**
+- An `editor.py`-style second LLM pass that critiques/polishes a draft
+  before it reaches human review (voice-consistency check, tightening) —
+  assists the review, doesn't replace it. The human still makes the final
+  call; an LLM should never auto-approve its own output.
+- Email as a remote trigger for review, so you're not tied to being at a
+  terminal when a draft is ready. A full closed-loop "approve by replying
+  to the email" flow needs something watching the inbox (real work); a
+  lighter version — email a notification + link to a small approval page —
+  gets most of the value for much less complexity.
+
 **Concepts:** what a "review queue" pattern buys you, X API v2 posting
 (tweets, media upload), why you want an audit log before you trust
 automation more.
