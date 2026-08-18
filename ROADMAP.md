@@ -6,13 +6,16 @@ turning it on at the end. Concepts we'll cover while building each phase are
 listed under it; treat those as the syllabus for that phase.
 
 Scope locked in so far:
-- **Platform:** X only, for now.
+- **Platform:** X is the real target, but we're building/testing against
+  Bluesky (junogrows.bsky.social) first as a free, zero-risk sandbox — X
+  gets added once the pipeline is proven.
 - **Content:** text + images, video added once the first two are solid.
 - **Posting model:** draft-and-approve. Full autonomy is a possible *later*
   phase, not a starting assumption.
-- **Persona:** stylized/CGI "digital being," personality-first (not a
-  narrow-niche expert account). Defined in [docs/persona-brief.md](docs/persona-brief.md).
+- **Persona:** stylized/CGI "digital being" named Juno, personality-first
+  (not a narrow-niche expert account). Defined in [docs/persona-brief.md](docs/persona-brief.md).
 - **Pace:** side-project — cheap tools, incremental phases.
+- **LLM provider:** Groq (free tier), model `openai/gpt-oss-120b`.
 
 ---
 
@@ -20,21 +23,22 @@ Scope locked in so far:
 
 Get the boring stuff decided once so later phases don't stall on it.
 
-- [ ] Lock the persona brief (name, voice, backstory, visual spec, content
-      pillars) — see `docs/persona-brief.md`.
+- [x] Lock the persona brief (name, voice, backstory, visual spec, content
+      pillars) — see `docs/persona-brief.md`. Juno, v1.
 - [ ] Pick and provision an X Developer App. As of Feb 2026, X moved new
       developers to pay-as-you-go pricing: $0.015/post created ($0.20 if it
       contains a link), $0.005/post read (capped 2M reads/mo), no monthly
       minimum. At side-project posting volume this is cheap (a few
       dollars/month) — verify current pricing before committing, but it's no
-      longer the blocker it used to be.
-- [ ] Optional: prototype against Bluesky (AT Protocol) first — fully free
-      API, no developer application/review queue, generous rate limits. Good
-      zero-cost sandbox for the pipeline before it touches a billed API.
-- [ ] Decide secrets management (`.env` + `.gitignore` is enough at this
-      scale — no need for a secrets vault for a side project).
-- [ ] Pick the LLM provider for persona text generation (Claude API is the
-      natural default given the toolchain).
+      longer the blocker it used to be. Deferred until Bluesky pipeline is
+      proven out.
+- [x] Prototype against Bluesky (AT Protocol) first — account created
+      (junogrows.bsky.social), app password scoped without DM access,
+      connectivity verified end-to-end via `bluesky_test.py`.
+- [x] Decide secrets management — `.env` + `.env.example` + `.gitignore`
+      pattern in place.
+- [x] Pick the LLM provider for persona text generation — Groq, free tier,
+      model `openai/gpt-oss-120b`.
 
 **Concepts:** API key hygiene / never committing secrets, X API tiers &
 rate limits, what a "developer app" even is on X.
@@ -47,13 +51,15 @@ The smallest useful thing: given the persona brief, generate an on-voice
 draft tweet, and let a human approve/reject/edit it. No posting automation
 yet — output can just print to console or write to a file you copy-paste.
 
-- [ ] Turn the persona brief into a system prompt.
-- [ ] Build a minimal script: prompt → draft text → print for review.
+- [x] Turn the persona brief into a system prompt — `pipeline/persona.py`.
+- [x] Build a minimal script: prompt → draft text → print for review —
+      `pipeline/draft.py`, grounded with the real current date so it
+      doesn't hallucinate temporal claims.
 - [ ] Add lightweight persona "memory" so drafts don't repeat themselves or
       contradict earlier posts (start with: just feed recent past posts back
-      into context — no vector DB needed yet).
-- [ ] Manually post a handful of approved drafts to X by hand, see how they
-      read in the wild.
+      into context — no vector DB needed yet). In progress: `pipeline/history.py`.
+- [ ] Manually post a handful of approved drafts (Bluesky for now, X once
+      added) by hand, see how they read in the wild — one posted so far.
 
 **Concepts:** system prompts vs. user prompts, prompt engineering for voice
 consistency, context windows, why "memory" for an LLM app is usually just
