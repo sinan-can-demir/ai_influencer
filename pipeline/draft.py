@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from persona import SYSTEM_PROMPT
+from persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT
 from history import get_recent_posts
 from dotenv import load_dotenv
 from datetime import date
@@ -26,6 +26,17 @@ def generate_draft():
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"today is {today}. here's what you posted recently:\n{recent_text}\nwrite today's post"}
             ],
+    )
+    return response.choices[0].message.content
+
+def generate_image_prompt(post_text):
+    client = groq_client()
+    response = client.chat.completions.create(
+        model=DRAFT_MODEL,
+        messages=[
+            {"role": "system", "content": IMAGE_SYSTEM_PROMPT},
+            {"role": "user", "content": post_text}
+        ],
     )
     return response.choices[0].message.content
 

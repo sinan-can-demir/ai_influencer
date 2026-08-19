@@ -1,7 +1,7 @@
 
 from dotenv import load_dotenv
 from datetime import datetime
-from persona import IMAGE_PROMPT
+from draft import generate_image_prompt
 from gradio_client import Client, handle_file
 from PIL import Image
 from history import log_image
@@ -14,10 +14,9 @@ NUM_REFERENCE_IMAGES=1 # to determine how many images will be used
 
 load_dotenv()
 
-def get_prompt():
-    # TODO: hardcoded for now, may need to vary per-post later
-    prompt=IMAGE_PROMPT 
-    print("prompt recevied: success")
+def get_prompt(post_text):
+    prompt=generate_image_prompt(post_text)
+    print("image prompt recevied: success")
     return prompt
 
 def save_image(image, save_path) -> None:
@@ -63,9 +62,9 @@ def generate_conditioned_image(prompt, images):
     print("Conditioned image generated: success")
     return result
 
-def image_pipeline():
+def image_pipeline(post_text):
     try:
-        prompt=get_prompt()
+        prompt=get_prompt(post_text)
         paths = handle_path(REFERENCE_PATH)
         images = input_images(paths)
         result = generate_conditioned_image(prompt, images)
@@ -80,4 +79,4 @@ def image_pipeline():
         print("Image pipeline complete: failure")
 
 if __name__ == "__main__":
-    image_pipeline()
+    image_pipeline("test post text")

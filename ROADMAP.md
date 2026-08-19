@@ -119,24 +119,35 @@ Now give the persona a consistent face/look for images.
         version, another API-naming surprise).
 - [ ] If Step 2 consistency isn't good enough, escalate to training a
       small LoRA on the curated reference set (unchanged fallback plan).
-- [ ] **Log image generations**, same pattern as `pipeline/history.py`'s
+- [x] **Log image generations**, same pattern as `pipeline/history.py`'s
       post logging: `IMAGE_HISTORY_PATH = "data/image_history.jsonl"` +
       `log_image(prompt, reference_images, seed, output_path)`, called
       from `image_pipeline()` after a successful save. Gives an audit
       trail and lets a good result's seed be reproduced/riffed on later.
-      Scoped, not yet built.
-- [ ] **Have Groq generate the image prompt per-post**, instead of the
-      current static `IMAGE_PROMPT`. New system-prompt content in
-      `persona.py` (describe scene/pose/mood, not physical traits — those
-      come from reference images now); new `generate_image_prompt(post_text)`
-      in `draft.py`, reusing the existing `groq_client()`/`DRAFT_MODEL`;
-      `image.py`'s `get_prompt()` and `image_pipeline()` both need to take
-      `post_text` as a parameter to thread it through. Caller supplies the
-      post text manually for now (e.g. from a `generate_draft()` call) —
-      full auto-chaining of draft → matching image is the item below, not
-      this one. Scoped, not yet built.
+      Along the way, `image.py` stopped having functions silently reach
+      for their own dependencies (`input_images()`, `generate_conditioned_image()`
+      now take `paths`/`images` as real parameters instead of fetching them
+      internally) — needed so the logged `reference_images`/`seed`/
+      `output_path` reflect what was actually sent to the model.
+- [x] **Have Groq generate the image prompt per-post**, instead of the
+      static `IMAGE_PROMPT`. New `IMAGE_SYSTEM_PROMPT` in `persona.py`
+      (describes scene/pose/mood, explicitly excludes physical traits —
+      those come from reference images now, repeating them in text fights
+      the conditioning instead of helping it); new
+      `generate_image_prompt(post_text)` in `draft.py`, reusing the
+      existing `groq_client()`/`DRAFT_MODEL`; `image.py`'s `get_prompt()`
+      and `image_pipeline()` both take `post_text` as a parameter now.
+      Verified end to end with a real `generate_draft()` output — the
+      generated scene (ceiling-gazing, a one-minute timer on a desk)
+      matched that day's actual draft content while keeping Juno's
+      established render style. Caller still supplies the post text
+      manually for now — full auto-chaining of draft → matching image is
+      the item below, not this one.
 - [ ] Wire image generation into the draft-review script from Phase 1, so a
-      draft is (text, image) reviewed together.
+      draft is (text, image) reviewed together. Natural place to also
+      resolve the import/path inconsistency (`pipeline/` modules currently
+      assume they're the one being run directly) via a single driver
+      entrypoint.
 
 **Concepts:** diffusion models at a high level, why "character consistency"
 is the hard problem in AI image generation, LoRA vs. IP-Adapter vs.
