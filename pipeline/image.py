@@ -67,8 +67,10 @@ def image_pipeline():
         print(result)
         image = Image.open(result[0])
         save_image(image)
+        print("Image pipeline complete: success")
     except Exception as e:
         print(f"Error: {e}")
+        print("Image pipeline complete: failure")
     
 
 if __name__ == "__main__":
