@@ -101,20 +101,28 @@ Now give the persona a consistent face/look for images.
         (hair/eyes/motif/palette) but a flatter, more generic render style
         than the bootstrap reference set — expected, since this is a
         weaker free model with no reference-image conditioning at all yet.
-  - [ ] **Step 2 (in progress):** feed in the actual reference images for
-        real identity-conditioned generation. HF's clean `InferenceClient`
-        doesn't support this on the free tier either — the `image-to-image`
-        task is *only* mapped to paid providers, `hf-inference` isn't even
-        listed. Remaining free path: call a community **Space** running
-        IP-Adapter or similar directly via `gradio_client`, on free ZeroGPU
-        compute. Avoid FaceID-specific variants (e.g. IP-Adapter-FaceID) —
-        those run real-face-recognition embeddings and are a poor match for
-        Juno's painterly illustration style. Evaluating
-        `black-forest-labs/flux-klein-9b-kv` (official org, confirmed
-        running on ZeroGPU) as a candidate — need to check its actual
-        Gradio "Use via API" panel before committing to it.
+  - [x] **Step 2 (done, verified working):** feeds Juno's actual reference
+        images in for real identity-conditioned generation, via
+        `gradio_client` calling `black-forest-labs/flux-klein-9b-kv`
+        (official org Space, running on free ZeroGPU compute) — HF's clean
+        `InferenceClient` doesn't support image-to-image on the free tier
+        at all (only paid providers), so this Space-based path was the
+        real free option. Result is noticeably closer to the bootstrap
+        reference set than step 1, in both identity and render style.
+        Two real constraints hit along the way: more than 1 reference
+        image triggered an unhelpful ZeroGPU `RuntimeError` (currently
+        sending just 1 — worth revisiting whether 2-3 works, since more
+        references generally means better consistency); anonymous calls
+        get almost no ZeroGPU quota, so the client authenticates with
+        `token=` (confirmed the correct kwarg via `inspect.signature()`
+        against the installed library — `hf_token` doesn't exist on this
+        version, another API-naming surprise).
 - [ ] If Step 2 consistency isn't good enough, escalate to training a
       small LoRA on the curated reference set (unchanged fallback plan).
+- [ ] Have Groq generate the image prompt per-post (reusing draft.py's
+      groq_client()), instead of a static hardcoded prompt — so the image
+      matches what that specific post is about instead of a generic scene.
+      Scoped, not yet built.
 - [ ] Wire image generation into the draft-review script from Phase 1, so a
       draft is (text, image) reviewed together.
 
