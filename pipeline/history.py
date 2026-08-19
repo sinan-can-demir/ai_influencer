@@ -5,11 +5,12 @@ import json
 
 os.makedirs("data",exist_ok=True)
 HISTORY_PATH="data/post_history.jsonl"
+IMAGE_HISTORY_PATH="data/image_history.jsonl"
 
 
 def log_post(text, uri) -> None:
     
-    print("logging started...")
+    print("Post logging started...")
 
     timestamp = datetime.now().isoformat()
     log = {
@@ -20,7 +21,7 @@ def log_post(text, uri) -> None:
     with open(HISTORY_PATH,"a") as file:
         file.write(json.dumps(log) + "\n")
 
-    print("logged succesfully")
+    print("Post logged succesfully: success")
 
 def get_recent_posts(n=5) -> list:
     results = []
@@ -37,3 +38,17 @@ def get_recent_posts(n=5) -> list:
         results.append(record["text"])
 
     return results
+
+def log_image(prompt, reference_images, seed, output_path):
+    timestamp = datetime.now().isoformat()
+    log = {
+        "timestamp": timestamp,
+        "prompt": prompt,
+        "reference_images": reference_images,
+        "seed": seed,
+        "output_path": output_path
+    }
+
+    with open(IMAGE_HISTORY_PATH,"a") as file:
+        file.write(json.dumps(log) + "\n")
+    print("Image logged succesfully: success")
