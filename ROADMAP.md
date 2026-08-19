@@ -119,10 +119,22 @@ Now give the persona a consistent face/look for images.
         version, another API-naming surprise).
 - [ ] If Step 2 consistency isn't good enough, escalate to training a
       small LoRA on the curated reference set (unchanged fallback plan).
-- [ ] Have Groq generate the image prompt per-post (reusing draft.py's
-      groq_client()), instead of a static hardcoded prompt — so the image
-      matches what that specific post is about instead of a generic scene.
+- [ ] **Log image generations**, same pattern as `pipeline/history.py`'s
+      post logging: `IMAGE_HISTORY_PATH = "data/image_history.jsonl"` +
+      `log_image(prompt, reference_images, seed, output_path)`, called
+      from `image_pipeline()` after a successful save. Gives an audit
+      trail and lets a good result's seed be reproduced/riffed on later.
       Scoped, not yet built.
+- [ ] **Have Groq generate the image prompt per-post**, instead of the
+      current static `IMAGE_PROMPT`. New system-prompt content in
+      `persona.py` (describe scene/pose/mood, not physical traits — those
+      come from reference images now); new `generate_image_prompt(post_text)`
+      in `draft.py`, reusing the existing `groq_client()`/`DRAFT_MODEL`;
+      `image.py`'s `get_prompt()` and `image_pipeline()` both need to take
+      `post_text` as a parameter to thread it through. Caller supplies the
+      post text manually for now (e.g. from a `generate_draft()` call) —
+      full auto-chaining of draft → matching image is the item below, not
+      this one. Scoped, not yet built.
 - [ ] Wire image generation into the draft-review script from Phase 1, so a
       draft is (text, image) reviewed together.
 
