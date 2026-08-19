@@ -1,8 +1,8 @@
 
 
 from groq import Groq
-from persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT
-from history import get_recent_posts
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT
+from pipeline.history import get_recent_posts
 from dotenv import load_dotenv
 from datetime import date
 import os

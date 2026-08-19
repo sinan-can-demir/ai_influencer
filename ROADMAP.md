@@ -143,11 +143,19 @@ Now give the persona a consistent face/look for images.
       established render style. Caller still supplies the post text
       manually for now — full auto-chaining of draft → matching image is
       the item below, not this one.
-- [ ] Wire image generation into the draft-review script from Phase 1, so a
-      draft is (text, image) reviewed together. Natural place to also
-      resolve the import/path inconsistency (`pipeline/` modules currently
-      assume they're the one being run directly) via a single driver
-      entrypoint.
+- [x] Wire image generation into the draft-review script from Phase 1, so a
+      draft is (text, image) reviewed together — `driver.py` at repo root
+      (deliberately review-only, no posting: that stays a separate,
+      human-gated Phase 3 step, not a side effect of building this file).
+      Along the way, `pipeline/` became a real Python package
+      (`pipeline/__init__.py`, internal imports switched to explicit
+      `from pipeline.x import y`), resolving the import/path
+      inconsistency that had been flagged twice before — single-file
+      testing now goes through `python -m pipeline.draft` etc. instead of
+      running scripts directly. `image_pipeline()` now returns `save_path`
+      on success / `None` on failure so callers have a real signal instead
+      of guessing; `driver.py` reports success/partial-failure based on
+      that, rather than a blanket "success" regardless of what happened.
 
 **Concepts:** diffusion models at a high level, why "character consistency"
 is the hard problem in AI image generation, LoRA vs. IP-Adapter vs.

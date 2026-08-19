@@ -1,10 +1,10 @@
 
 from dotenv import load_dotenv
 from datetime import datetime
-from draft import generate_image_prompt
+from pipeline.draft import generate_image_prompt
 from gradio_client import Client, handle_file
 from PIL import Image
-from history import log_image
+from pipeline.history import log_image
 import os
 
 IMAGE_PATH="assets/generated"
@@ -62,7 +62,7 @@ def generate_conditioned_image(prompt, images):
     print("Conditioned image generated: success")
     return result
 
-def image_pipeline(post_text):
+def image_pipeline(post_text) -> str:
     try:
         prompt=get_prompt(post_text)
         paths = handle_path(REFERENCE_PATH)
@@ -74,9 +74,11 @@ def image_pipeline(post_text):
         save_image(image, save_path)
         print("Image pipeline complete: success")
         log_image(prompt,paths[:NUM_REFERENCE_IMAGES],result[1], save_path)
+        return save_path
     except Exception as e:
         print(f"Error: {e}")
         print("Image pipeline complete: failure")
+    return None
 
 if __name__ == "__main__":
     image_pipeline("test post text")
