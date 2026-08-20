@@ -1,16 +1,64 @@
 
 from pipeline.draft import generate_draft
 from pipeline.image import image_pipeline
+from pipeline.history import log_post
 
+from dotenv import load_dotenv
+import atproto
+import os
+
+load_dotenv()
+
+def get_bluesky_client() -> atproto.Client:
+    client = atproto.Client()
+    print("Atproto client initialized: success")
+    return client
+
+def get_bluesky_account():
+    handle = os.environ["BLUESKY_HANDLE"]
+    app_password = os.environ["BLUESKY_APP_PASSWORD"]
+    print("Get bluesky account: success")
+    return (handle,app_password)
+
+def login(client, handle, app_password) -> None:
+    profile = client.login(handle, app_password)
+    print(f"Logged in as: {profile.display_name} (@{profile.handle})")
+
+def post_draft(client, post_text, image_path):
+    if image_path:
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
+        ## TODO: The image alt message section is not an empty string
+        #  but determine if Juno needs an alt message generator as well 
+        post = client.send_image(text=post_text, image=image_bytes, image_alt="")
+    else:
+        post = client.send_post(text=post_text)
+    print(f"Draft posted: success \n {post.uri}")
+    log_post(post_text, post.uri)
 
 def main():
     post_text = generate_draft()
     print(post_text)
-    image_path = image_pipeline(post_text)
-    if image_path:
-        print("Driver completed: success")
+    image_path = None
+
+    image_choice = input("Include an image with this post? (y/n): ")
+    ## TODO: At some point let Juno handle whether she 
+    ## wants to post an image.
+    if image_choice.lower() == "y":
+        image_path = image_pipeline(post_text)
+        if image_path:
+            print("Driver completed with image: success")
+        else:
+            print("Driver completed: partial failure (image generation failed)")
+    
+    post_choice = input("Post this? (y/n): ")
+    if post_choice.lower() == "y":
+        client = get_bluesky_client()
+        handle, app_password = get_bluesky_account()
+        login(client, handle, app_password)
+        post_draft(client, post_text, image_path)
     else:
-        print("Driver completed: partial failure (image generation failed)")
+        print("Driver completed without any post: success")
 
 if __name__ == "__main__":
     try:

@@ -63,6 +63,7 @@ def generate_conditioned_image(prompt, images):
     return result
 
 def image_pipeline(post_text) -> str:
+## Log creation is handled within the pipeline
     try:
         prompt=get_prompt(post_text)
         paths = handle_path(REFERENCE_PATH)

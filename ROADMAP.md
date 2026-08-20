@@ -144,10 +144,17 @@ Now give the persona a consistent face/look for images.
       manually for now — full auto-chaining of draft → matching image is
       the item below, not this one.
 - [x] Wire image generation into the draft-review script from Phase 1, so a
-      draft is (text, image) reviewed together — `driver.py` at repo root
-      (deliberately review-only, no posting: that stays a separate,
-      human-gated Phase 3 step, not a side effect of building this file).
-      Along the way, `pipeline/` became a real Python package
+      draft is (text, image) reviewed together — `driver.py` at repo root.
+      Initially built review-only (posting deliberately left out, since
+      wiring it in as a side effect of building this file would've bypassed
+      the draft-and-approve model rather than honoring it) — posting was
+      added right after, but gated behind an explicit `input("Post this?
+      y/n")` confirmation, same category as the image-inclusion prompt.
+      That distinction (auto-posting vs. a real human checkpoint) is why
+      it was safe to add in the same file. `driver.py` now supersedes
+      `bluesky_test.py` as the actual posting tool — `bluesky_test.py`
+      stays for now as a manual fallback, to be retired later. Along the
+      way, `pipeline/` became a real Python package
       (`pipeline/__init__.py`, internal imports switched to explicit
       `from pipeline.x import y`), resolving the import/path
       inconsistency that had been flagged twice before — single-file
@@ -170,9 +177,14 @@ Replace "print to console" with something you'd actually want to use daily.
 
 - [ ] Simple local review UI (Streamlit is the lowest-effort option for a
       Python side project — a page listing pending drafts with
-      approve/edit/reject).
-- [ ] Approved drafts get posted to X via the API (this is where posting
-      automation actually enters the picture — still human-gated).
+      approve/edit/reject). `driver.py`'s CLI y/n prompts are a working
+      but minimal version of this for Bluesky already — a real UI is
+      still worth it once this feels limiting, and is the natural place
+      to add review for X once that's connected.
+- [x] Approved drafts get posted via the API — done for Bluesky
+      (`driver.py`'s `post_draft()`, human-gated behind a CLI prompt,
+      verified end to end with a real live post). Still open for X once
+      Phase 0's X Developer App is provisioned.
 - [ ] Basic logging: what was posted, when, and the draft that produced it
       (a flat file or SQLite is enough — no need for a real database yet).
 
@@ -186,6 +198,14 @@ Replace "print to console" with something you'd actually want to use daily.
   to the email" flow needs something watching the inbox (real work); a
   lighter version — email a notification + link to a small approval page —
   gets most of the value for much less complexity.
+- Let Juno herself decide whether a given post gets an image, instead of
+  the human choosing every time (currently `driver.py` asks y/n per run).
+  It's a more honest fit for the "dynamic, personality-driven being"
+  framing — a real posting habit isn't "human picks image on/off," it's
+  "this moment felt worth a photo, that one didn't." Deferred for now
+  since it needs a real signal (structured output from `generate_draft()`,
+  or a second small Groq call) rather than a human toggle, and the
+  toggle works fine as a starting point.
 
 **Concepts:** what a "review queue" pattern buys you, X API v2 posting
 (tweets, media upload), why you want an audit log before you trust
