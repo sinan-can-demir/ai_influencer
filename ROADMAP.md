@@ -175,11 +175,11 @@ yourself.
 
 Replace "print to console" with something you'd actually want to use daily.
 
-- [ ] Simple local review UI (Streamlit is the lowest-effort option for a
-      Python side project — a page listing pending drafts with
-      approve/edit/reject). `driver.py`'s CLI y/n prompts are a working
-      but minimal version of this for Bluesky already — a real UI is
-      still worth it once this feels limiting, and is the natural place
+- [x] Simple local review UI — done (`review_ui.py`, Streamlit): generates
+      a draft live, lets you edit the text, optionally generate an image,
+      then post or reject/start over. Same underlying functions as
+      `driver.py` (which stays as the CLI alternative). Verified end to
+      end with a real live post through the UI. Still the natural place
       to add review for X once that's connected.
 - [x] Approved drafts get posted via the API — done for Bluesky
       (`driver.py`'s `post_draft()`, human-gated behind a CLI prompt,
