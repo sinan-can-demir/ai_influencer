@@ -217,7 +217,12 @@ automation more.
 
 Only start this once text+image is producing consistent, on-brand output
 you're happy with — video is the most expensive and hardest-to-iterate-on
-medium, so validate the persona before spending here.
+medium, so validate the persona before spending here. Also explicitly
+deferred on cost grounds, not just maturity: unlike text (Groq) and images
+(Hugging Face), quality video generation (Runway/Kling/Luma) has no
+meaningful free tier — it's a real departure from the free/open-tooling
+principle that's shaped every other tool choice so far, so this phase
+waits until that's a deliberate decision, not a default.
 
 - [ ] Decide approach: animate existing stills (cheaper, more limited) vs. a
       generative video API (Runway/Kling/Luma — pricier, more capable).
@@ -323,3 +328,7 @@ be resisted, not defaulted into.
   model; revisit later, deliberately.
 - Monetization mechanics (sponsorships, affiliate, etc.) — not blocking the
   build, address once there's an audience.
+- Voice (spoken posts, narration, eventually audio for video) — flagged as
+  a future idea, not scoped yet. Same cost-gating concern as Phase 4 video
+  likely applies (quality TTS APIs are mostly paid); revisit once there's
+  an actual reason to build it, not preemptively.
