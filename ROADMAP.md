@@ -198,14 +198,14 @@ Replace "print to console" with something you'd actually want to use daily.
   to the email" flow needs something watching the inbox (real work); a
   lighter version — email a notification + link to a small approval page —
   gets most of the value for much less complexity.
-- Let Juno herself decide whether a given post gets an image, instead of
-  the human choosing every time (currently `driver.py` asks y/n per run).
-  It's a more honest fit for the "dynamic, personality-driven being"
-  framing — a real posting habit isn't "human picks image on/off," it's
-  "this moment felt worth a photo, that one didn't." Deferred for now
-  since it needs a real signal (structured output from `generate_draft()`,
-  or a second small Groq call) rather than a human toggle, and the
-  toggle works fine as a starting point.
+- [x] Let Juno herself decide whether a given post gets an image — done.
+  `IMAGE_DECISION_SYSTEM_PROMPT` (persona.py) + `should_generate_image()`
+  (draft.py, built on `generate_text()`) judge whether a post describes a
+  visual moment worth a photo, replacing the old human y/n toggle in
+  `driver.py` and the checkbox + separate button in `review_ui.py`. No
+  human override by design — the existing post/reject gate stays the
+  only human checkpoint. Verified end to end via both entry points,
+  including a real live post.
 - [x] Shared `generate_text(system_prompt, user_content)` helper in
   `draft.py` — done. `generate_draft()` and `generate_image_prompt()`
   both call it now instead of duplicating the client-creation/
