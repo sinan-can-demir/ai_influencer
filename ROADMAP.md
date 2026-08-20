@@ -210,9 +210,15 @@ Replace "print to console" with something you'd actually want to use daily.
   `draft.py` — done. `generate_draft()` and `generate_image_prompt()`
   both call it now instead of duplicating the client-creation/
   `chat.completions.create`/response-extraction boilerplate; each just
-  builds its own prompt. A third consumer is already flagged
-  (`post_draft()`'s alt-text TODO in `driver.py`), and Phase 5's reply
-  generation will be a fourth.
+  builds its own prompt. Phase 5's reply generation will be a further
+  consumer.
+- [x] Alt text for posted images — done. `ALT_TEXT_SYSTEM_PROMPT`
+  (persona.py) + `generate_alt_text()` (draft.py, built on
+  `generate_text()`) turn the image-generation scene prompt into
+  screen-reader-appropriate alt text. `image_pipeline()` now returns
+  `(save_path, alt_text)`; `driver.py` and `review_ui.py` thread
+  `image_alt` through to `send_image()`, replacing the hardcoded `""`.
+  Verified end to end with a real live post carrying real alt text.
 
 **Concepts:** what a "review queue" pattern buys you, X API v2 posting
 (tweets, media upload), why you want an audit log before you trust
