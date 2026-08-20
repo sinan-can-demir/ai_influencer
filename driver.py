@@ -24,13 +24,11 @@ def login(client, handle, app_password) -> None:
     profile = client.login(handle, app_password)
     print(f"Logged in as: {profile.display_name} (@{profile.handle})")
 
-def post_draft(client, post_text, image_path):
+def post_draft(client, post_text, image_path, image_alt):
     if image_path:
         with open(image_path, "rb") as f:
             image_bytes = f.read()
-        ## TODO: The image alt message section is not an empty string
-        #  but determine if Juno needs an alt message generator as well 
-        post = client.send_image(text=post_text, image=image_bytes, image_alt="")
+        post = client.send_image(text=post_text, image=image_bytes, image_alt=image_alt)
     else:
         post = client.send_post(text=post_text)
     print(f"Draft posted: success \n {post.uri}")
@@ -40,12 +38,13 @@ def main():
     post_text = generate_draft()
     print(post_text)
     image_path = None
+    image_alt = None
 
     image_choice = input("Include an image with this post? (y/n): ")
     ## TODO: At some point let Juno handle whether she 
     ## wants to post an image.
     if image_choice.lower() == "y":
-        image_path = image_pipeline(post_text)
+        image_path, image_alt = image_pipeline(post_text)
         if image_path:
             print("Driver completed with image: success")
         else:
@@ -56,7 +55,7 @@ def main():
         client = get_bluesky_client()
         handle, app_password = get_bluesky_account()
         login(client, handle, app_password)
-        post_draft(client, post_text, image_path)
+        post_draft(client, post_text, image_path, image_alt)
     else:
         print("Driver completed without any post: success")
 

@@ -21,6 +21,7 @@ if "draft_text" not in st.session_state:
     st.session_state.draft_text = None
 if "image_path" not in st.session_state:
     st.session_state.image_path = None
+    st.session_state.image_alt = None
 if "posted" not in st.session_state:
     st.session_state.posted = False
 
@@ -28,6 +29,7 @@ if st.button("Generate Draft"):
 
     st.session_state.draft_text = generate_draft()
     st.session_state.image_path = None
+    st.session_state.image_alt = None
     st.session_state.posted = False
 
 if st.session_state.draft_text is not None:
@@ -36,7 +38,7 @@ if st.session_state.draft_text is not None:
     include_image = st.checkbox("Include an image")
     if include_image and st.session_state.image_path is None:
         if st.button("Generate Image"):
-            st.session_state.image_path = image_pipeline(st.session_state.draft_text)
+            st.session_state.image_path, st.session_state.image_alt = image_pipeline(st.session_state.draft_text)
 
     if st.session_state.image_path:
         st.image(st.session_state.image_path)
@@ -50,13 +52,15 @@ if st.session_state.draft_text is not None:
             login(client, handle, app_password)
             post_draft(client, 
                        st.session_state.draft_text, 
-                       st.session_state.image_path)
+                       st.session_state.image_path,
+                       st.session_state.image_alt)
             st.session_state.posted = True
 
     with col2:
         if st.button("Reject / start over"):
             st.session_state.draft_text= None
             st.session_state.image_path= None
+            st.session_state.image_alt = None
             st.session_state.posted = False
 
 if st.session_state.posted:

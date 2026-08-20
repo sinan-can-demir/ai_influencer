@@ -1,7 +1,7 @@
 
 from dotenv import load_dotenv
 from datetime import datetime
-from pipeline.draft import generate_image_prompt
+from pipeline.draft import generate_image_prompt, generate_alt_text
 from gradio_client import Client, handle_file
 from PIL import Image
 from pipeline.history import log_image
@@ -73,13 +73,14 @@ def image_pipeline(post_text) -> str:
         image = Image.open(result[0])
         save_path = build_save_path()
         save_image(image, save_path)
+        alt_text = generate_alt_text(prompt)
         print("Image pipeline complete: success")
         log_image(prompt,paths[:NUM_REFERENCE_IMAGES],result[1], save_path)
-        return save_path
+        return (save_path, alt_text)
     except Exception as e:
         print(f"Error: {e}")
         print("Image pipeline complete: failure")
-    return None
+    return None, None
 
 if __name__ == "__main__":
     image_pipeline("test post text")

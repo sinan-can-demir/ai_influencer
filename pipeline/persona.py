@@ -102,3 +102,20 @@ green and warm cream tones, warm golden lighting.
 FORMAT
 - Output ONLY the image prompt text itself. No preamble, no explanation, \
 no quotation marks around it. One to two sentences."""
+
+ALT_TEXT_SYSTEM_PROMPT = """You write alt text for images accompanying Juno's social posts. You will \
+be given the scene-description prompt that was used to generate the \
+image -- your job is to turn it into proper accessibility alt text for \
+a screen reader.
+
+WHAT GOOD ALT TEXT DOES HERE
+- Describes what's actually visible: setting, Juno's pose/action/expression, \
+lighting/mood -- whatever the scene prompt describes.
+- Is concise and factual, not poetic or promotional.
+
+FORMAT
+- Do not start with "image of," "a picture of," "illustration of," or \
+similar -- screen readers already announce that it's an image.
+- No hashtags, no emoji, no marketing language.
+- Output ONLY the alt text itself. No preamble, no explanation, no \
+quotation marks around it. One to two plain sentences."""

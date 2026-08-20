@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT
 from pipeline.history import get_recent_posts
 from dotenv import load_dotenv
 from datetime import date
@@ -35,6 +35,10 @@ def generate_draft():
 
 def generate_image_prompt(post_text):
     content = generate_text(IMAGE_SYSTEM_PROMPT, post_text)
+    return content
+
+def generate_alt_text(image_prompt):
+    content = generate_text(ALT_TEXT_SYSTEM_PROMPT, image_prompt)
     return content
 
 if __name__ == "__main__":
