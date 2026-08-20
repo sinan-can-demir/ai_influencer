@@ -15,30 +15,27 @@ def groq_client() -> Groq:
     print("Groq client initialized.")
     return client
 
-def generate_draft():
+def generate_text(system_prompt, user_content):
     client = groq_client()
-    today = date.today()
-    recent_posts = get_recent_posts()
-    recent_text = "\n".join(recent_posts)
     response = client.chat.completions.create(
         model=DRAFT_MODEL,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"today is {today}. here's what you posted recently:\n{recent_text}\nwrite today's post"}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content}
             ],
     )
     return response.choices[0].message.content
 
+def generate_draft():
+    day = date.today()
+    recent_posts = get_recent_posts()
+    recent_text = "\n".join(recent_posts)
+    content = generate_text(SYSTEM_PROMPT, f"today is {day}. here's what you posted recently:\n{recent_text}\nwrite today's post")
+    return content
+
 def generate_image_prompt(post_text):
-    client = groq_client()
-    response = client.chat.completions.create(
-        model=DRAFT_MODEL,
-        messages=[
-            {"role": "system", "content": IMAGE_SYSTEM_PROMPT},
-            {"role": "user", "content": post_text}
-        ],
-    )
-    return response.choices[0].message.content
+    content = generate_text(IMAGE_SYSTEM_PROMPT, post_text)
+    return content
 
 if __name__ == "__main__":
     print(generate_draft())

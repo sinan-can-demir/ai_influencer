@@ -36,11 +36,6 @@ if st.session_state.draft_text is not None:
     include_image = st.checkbox("Include an image")
     if include_image and st.session_state.image_path is None:
         if st.button("Generate Image"):
-            # TODO: call image_pipeline(st.session_state.draft_text) --
-            # note this should use the current (possibly edited) text in
-            # st.session_state.draft_text, not whatever generate_draft()
-            # originally returned. Store the returned path in
-            # st.session_state.image_path.
             st.session_state.image_path = image_pipeline(st.session_state.draft_text)
 
     if st.session_state.image_path:
@@ -49,10 +44,6 @@ if st.session_state.draft_text is not None:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Post"):
-            # TODO: get_bluesky_client() -> get_bluesky_account() ->
-            # login(client, handle, app_password) -> post_draft(client,
-            # st.session_state.draft_text, st.session_state.image_path).
-            # On success, set st.session_state.posted = True.
             print("Post approved: success")
             client = get_bluesky_client()
             handle, app_password = get_bluesky_account()
@@ -64,9 +55,6 @@ if st.session_state.draft_text is not None:
 
     with col2:
         if st.button("Reject / start over"):
-            # TODO: reset draft_text/image_path/posted back to their
-            # empty/False defaults so the page returns to its starting
-            # state.
             st.session_state.draft_text= None
             st.session_state.image_path= None
             st.session_state.posted = False
