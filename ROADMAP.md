@@ -206,6 +206,14 @@ Replace "print to console" with something you'd actually want to use daily.
   since it needs a real signal (structured output from `generate_draft()`,
   or a second small Groq call) rather than a human toggle, and the
   toggle works fine as a starting point.
+- A shared `generate_text(system_prompt, user_content)` helper in
+  `draft.py`, since `generate_draft()` and `generate_image_prompt()`
+  already duplicate the same client-creation/`chat.completions.create`/
+  response-extraction boilerplate, varying only in system prompt and
+  user content. A third consumer is already flagged (`post_draft()`'s
+  alt-text TODO in `driver.py`), and Phase 5's reply generation will be
+  a fourth — worth deduplicating now that there's real repetition, not
+  hypothetically. Not yet built.
 
 **Concepts:** what a "review queue" pattern buys you, X API v2 posting
 (tweets, media upload), why you want an audit log before you trust
@@ -330,5 +338,16 @@ be resisted, not defaulted into.
   build, address once there's an audience.
 - Voice (spoken posts, narration, eventually audio for video) — flagged as
   a future idea, not scoped yet. Same cost-gating concern as Phase 4 video
-  likely applies (quality TTS APIs are mostly paid); revisit once there's
-  an actual reason to build it, not preemptively.
+  likely applies (quality TTS APIs like ElevenLabs are mostly paid);
+  revisit once there's an actual reason to build it, not preemptively.
+  Options if/when this gets built, roughly cheapest-to-best quality:
+  - Basic Python TTS (`pyttsx3`, wraps the OS's built-in speech engine —
+    `espeak-ng` on Linux) — free, fully local, but genuinely robotic,
+    closer to an old screen reader than a natural voice.
+  - Open-source neural TTS (Piper, Coqui TTS/XTTS, Bark) — meaningfully
+    more natural, and some are callable the same way Phase 2's image
+    generation works: via `gradio_client` against a free-tier Hugging
+    Face Space, reusing a pattern already proven out rather than
+    learning a new one.
+  - Paid APIs (ElevenLabs etc.) — best quality, but a real departure
+    from the free/open-tooling principle, same as Phase 4 video.
