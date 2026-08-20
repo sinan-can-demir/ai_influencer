@@ -229,7 +229,75 @@ tool choice should be revisited right before you start it, not locked in now.
 
 ---
 
-## Phase 5 — Feedback loop (stretch)
+## Phase 5 — Engagement (replies & memory)
+
+Give Juno a way to notice and respond to people, not just post outward.
+Reactive first, deliberately — proactive engagement is a later, separate
+decision once the reactive system has run long enough to trust.
+
+- [ ] Pull mentions/replies via the platform API (Bluesky notifications
+      endpoint first, matching the existing build-on-Bluesky-first
+      pattern). This is a new *read* path — nothing like it exists yet;
+      `pipeline/` currently only ever writes outward.
+- [ ] Content filtering before anything reaches review: skip
+      harassment/hate/spam/explicit content, same spirit as the interest
+      exclusions already made when setting up the Bluesky account
+      (Politics/Finance were deliberately skipped as high-controversy,
+      low-fit for an earnest persona).
+- [ ] Reply drafts go through the same draft-and-approve gate as original
+      posts — no exception, no auto-reply, even for reactive mentions.
+      Likely surfaces as a review queue ("3 pending replies") rather than
+      one-at-a-time like `driver.py`'s current single-post flow, since
+      replies can arrive in a batch.
+- [ ] **Juno's own memory file** — distinct from `data/post_history.jsonl`
+      (which is a posting audit log, not self-knowledge). Tracks things
+      like: specific people she's talked to and what about, running
+      themes she's been exploring, self-observations that accumulate over
+      time. This is the mechanism for real character evolution: instead
+      of growth being purely narrative (what she happens to write about),
+      accumulated memory gets fed back into future `generate_draft()`/
+      reply-generation calls, the same way `get_recent_posts()` already
+      feeds bounded context in — just deeper and more structured than
+      "last 5 posts." Exact schema (jsonl vs. something richer, what
+      counts as memory-worthy) is a design task for when this gets built,
+      not decided here.
+- [ ] Proactive engagement (Juno browsing the platform and initiating
+      replies to posts she wasn't tagged in) — explicitly deferred until
+      the reactive system above has been running and trusted. Bigger
+      feature: needs timeline browsing plus real judgment about what's
+      worth engaging with, and carries more reputational risk if that
+      judgment is ever wrong. Do not build this alongside reactive
+      replies; revisit as its own deliberate decision once reactive is
+      proven, matching how autonomy itself stays a deliberate, separate
+      decision (see "Explicitly out of scope for now").
+
+**On the current architecture, for context:** `generate_draft()` and
+`generate_image_prompt()` are both single-shot calls to
+`openai/gpt-oss-120b` via Groq — no extended multi-step reasoning, no
+chain-of-thought. That's adequate for short creative writing, but reply
+generation (understanding a stranger's post, judging tone, avoiding
+missteps) is a harder task; a two-pass approach (draft the reply, then a
+second critique/polish pass — see the `editor.py` idea under Phase 3) is
+worth revisiting once real reply volume exists. Memory today is
+intentionally shallow: `get_recent_posts(n=5)` bounds what's fed into
+each generation call regardless of how much history has accumulated in
+storage. The new memory file above is what deepens that.
+
+**Safeguards, restated plainly:** every reply — reactive or (eventually)
+proactive — goes through draft-and-approve, same as original posts. This
+phase does not reopen the autonomy question; "Full autonomy / unattended
+posting... revisit later, deliberately" (see below) still applies
+unchanged, including to replies.
+
+**Concepts:** notification/mention APIs, why reply generation is a harder
+task than origination (needs to understand and respond to someone else's
+content, not just Juno's own voice), structured memory vs. unbounded log
+storage, why proactive engagement carries a different risk profile than
+reactive.
+
+---
+
+## Phase 6 — Feedback loop (stretch)
 
 Only after the above is running for a while and producing real engagement
 data.

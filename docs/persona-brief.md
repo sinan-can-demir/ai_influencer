@@ -96,6 +96,11 @@ if it turns out to be needed.
 and posting (Bluesky, `junogrows.bsky.social`), organically rather than as
 a deliberately pre-planned "activation moment." Not revisited retroactively.
 
+The "replies/commentary... stay occasional" note under Content pillars
+above is the seed of what's now scoped as ROADMAP.md's Phase 5
+(Engagement) — reactive replies first, proactive engagement deferred
+until that's proven out.
+
 ## Why this doc matters technically
 
 Every downstream piece of the pipeline reads from this file:
