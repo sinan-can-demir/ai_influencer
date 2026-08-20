@@ -206,14 +206,13 @@ Replace "print to console" with something you'd actually want to use daily.
   since it needs a real signal (structured output from `generate_draft()`,
   or a second small Groq call) rather than a human toggle, and the
   toggle works fine as a starting point.
-- A shared `generate_text(system_prompt, user_content)` helper in
-  `draft.py`, since `generate_draft()` and `generate_image_prompt()`
-  already duplicate the same client-creation/`chat.completions.create`/
-  response-extraction boilerplate, varying only in system prompt and
-  user content. A third consumer is already flagged (`post_draft()`'s
-  alt-text TODO in `driver.py`), and Phase 5's reply generation will be
-  a fourth — worth deduplicating now that there's real repetition, not
-  hypothetically. Not yet built.
+- [x] Shared `generate_text(system_prompt, user_content)` helper in
+  `draft.py` — done. `generate_draft()` and `generate_image_prompt()`
+  both call it now instead of duplicating the client-creation/
+  `chat.completions.create`/response-extraction boilerplate; each just
+  builds its own prompt. A third consumer is already flagged
+  (`post_draft()`'s alt-text TODO in `driver.py`), and Phase 5's reply
+  generation will be a fourth.
 
 **Concepts:** what a "review queue" pattern buys you, X API v2 posting
 (tweets, media upload), why you want an audit log before you trust
