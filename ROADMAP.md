@@ -331,15 +331,28 @@ be resisted, not defaulted into.
 ## Explicitly out of scope for now
 
 - Multi-platform (Instagram/TikTok/etc.) — X only until the pipeline proves
-  itself.
+  itself. Worth revisiting sooner if Voice (below) ends up being a real
+  priority: confirmed via the atproto SDK's own embed models
+  (`atproto_client.models.app.bsky.embed.*` — images/video/external/
+  record/gallery, no audio type) that Bluesky has no standalone audio
+  embed, and X's posting is fundamentally the same (audio only rides
+  inside video, not as its own post type). Instagram/Facebook are
+  *assumed* to be more audio-native (Stories, Reels voiceover) but this
+  is unverified — check for real before treating it as a plan, the same
+  way the Bluesky assumption just turned out to be wrong.
 - Full autonomy / unattended posting — draft-and-approve is the standing
   model; revisit later, deliberately.
 - Monetization mechanics (sponsorships, affiliate, etc.) — not blocking the
   build, address once there's an audience.
 - Voice (spoken posts, narration, eventually audio for video) — flagged as
-  a future idea, not scoped yet. Same cost-gating concern as Phase 4 video
-  likely applies (quality TTS APIs like ElevenLabs are mostly paid);
-  revisit once there's an actual reason to build it, not preemptively.
+  a future idea, not scoped yet. Confirmed neither Bluesky nor X support
+  a standalone audio post (see Multi-platform note above), so this is
+  gated on either Phase 4 video (audio riding inside a video post) or
+  multi-platform expansion to something more audio-native — not a
+  standalone feature on the current platform. Same cost-gating concern as
+  Phase 4 video likely applies to the generation side (quality TTS APIs
+  like ElevenLabs are mostly paid); revisit once there's an actual reason
+  to build it, not preemptively.
   Options if/when this gets built, roughly cheapest-to-best quality:
   - Basic Python TTS (`pyttsx3`, wraps the OS's built-in speech engine —
     `espeak-ng` on Linux) — free, fully local, but genuinely robotic,
