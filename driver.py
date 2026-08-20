@@ -1,5 +1,5 @@
 
-from pipeline.draft import generate_draft
+from pipeline.draft import generate_draft, should_generate_image
 from pipeline.image import image_pipeline
 from pipeline.history import log_post
 
@@ -40,10 +40,8 @@ def main():
     image_path = None
     image_alt = None
 
-    image_choice = input("Include an image with this post? (y/n): ")
-    ## TODO: At some point let Juno handle whether she 
-    ## wants to post an image.
-    if image_choice.lower() == "y":
+    image_choice = should_generate_image(post_text)
+    if image_choice:
         image_path, image_alt = image_pipeline(post_text)
         if image_path:
             print("Driver completed with image: success")

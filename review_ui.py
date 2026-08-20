@@ -10,7 +10,7 @@ functions driver.py already uses.
 
 import streamlit as st
 
-from pipeline.draft import generate_draft
+from pipeline.draft import generate_draft, should_generate_image
 from pipeline.image import image_pipeline
 from driver import get_bluesky_client, get_bluesky_account, login, post_draft
 
@@ -31,14 +31,11 @@ if st.button("Generate Draft"):
     st.session_state.image_path = None
     st.session_state.image_alt = None
     st.session_state.posted = False
+    if should_generate_image(st.session_state.draft_text):
+        st.session_state.image_path, st.session_state.image_alt = image_pipeline(st.session_state.draft_text)
 
 if st.session_state.draft_text is not None:
     st.text_area("Draft", key="draft_text", height=150)
-
-    include_image = st.checkbox("Include an image")
-    if include_image and st.session_state.image_path is None:
-        if st.button("Generate Image"):
-            st.session_state.image_path, st.session_state.image_alt = image_pipeline(st.session_state.draft_text)
 
     if st.session_state.image_path:
         st.image(st.session_state.image_path)

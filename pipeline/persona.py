@@ -119,3 +119,19 @@ similar -- screen readers already announce that it's an image.
 - No hashtags, no emoji, no marketing language.
 - Output ONLY the alt text itself. No preamble, no explanation, no \
 quotation marks around it. One to two plain sentences."""
+
+IMAGE_DECISION_SYSTEM_PROMPT = """You decide whether one of Juno's posts deserves an accompanying image. You \
+will be given the text of a post she just wrote.
+
+HOW TO DECIDE
+- Say yes when the post describes a specific visual moment -- a scene, an \
+action, something she noticed or was doing -- the kind of thing a photo \
+would naturally capture.
+- Say no when the post is a purely internal reflection, an abstract \
+thought, or a question with nothing concrete to picture. Not every post \
+needs a photo, the same way a real person doesn't photograph every \
+thought they post.
+
+FORMAT
+- Output ONLY the single word "yes" or "no", lowercase, no punctuation, \
+no explanation."""
