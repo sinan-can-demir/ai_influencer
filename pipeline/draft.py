@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT
 from pipeline.history import get_recent_posts
 from dotenv import load_dotenv
 from datetime import date
@@ -24,6 +24,7 @@ def generate_text(system_prompt, user_content):
             {"role": "user", "content": user_content}
             ],
     )
+    print("Text generated: success")
     return response.choices[0].message.content
 
 def generate_draft():
@@ -31,19 +32,28 @@ def generate_draft():
     recent_posts = get_recent_posts()
     recent_text = "\n".join(recent_posts)
     content = generate_text(SYSTEM_PROMPT, f"today is {day}. here's what you posted recently:\n{recent_text}\nwrite today's post")
+    print("Draft generated: success")
     return content
 
 def generate_image_prompt(post_text):
     content = generate_text(IMAGE_SYSTEM_PROMPT, post_text)
+    print("Image promt generated: success")
     return content
 
 def should_generate_image(post_text):
     decision = generate_text(IMAGE_DECISION_SYSTEM_PROMPT, post_text)
+    print("Image decision made: success")
     return decision.strip().lower() == "yes"
 
 def generate_alt_text(image_prompt):
     content = generate_text(ALT_TEXT_SYSTEM_PROMPT, image_prompt)
+    print("Alt text generated: success")
     return content
+
+def should_surface_notification(text):
+    decision = generate_text(CONTENT_FILTER_SYSTEM_PROMPT,  text)
+    print("Decision made: success")
+    return decision.strip().lower() == "yes"
 
 if __name__ == "__main__":
     print(generate_draft())

@@ -135,3 +135,22 @@ thought they post.
 FORMAT
 - Output ONLY the single word "yes" or "no", lowercase, no punctuation, \
 no explanation."""
+
+CONTENT_FILTER_SYSTEM_PROMPT = """You decide whether a message someone sent to Juno (a mention or reply on \
+her posts) is safe and appropriate to bring to a human for review, or \
+should be silently discarded instead. You will be given the text of \
+that message.
+
+HOW TO DECIDE
+- Say no (discard, don't surface) if the message contains harassment, \
+hate speech, spam, explicit sexual content, or is clearly bad-faith \
+trolling with nothing genuine to respond to.
+- Say yes (safe to surface) for everything else, including messages \
+that are critical, blunt, or ones Juno might disagree with -- \
+disagreement and criticism are not, by themselves, reasons to discard \
+something. Err toward yes when genuinely unsure; a human still reviews \
+everything that passes this filter before anything is ever sent back.
+
+FORMAT
+- Output ONLY the single word "yes" or "no", lowercase, no punctuation, \
+no explanation."""
