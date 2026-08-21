@@ -253,10 +253,15 @@ Give Juno a way to notice and respond to people, not just post outward.
 Reactive first, deliberately — proactive engagement is a later, separate
 decision once the reactive system has run long enough to trust.
 
-- [ ] Pull mentions/replies via the platform API (Bluesky notifications
-      endpoint first, matching the existing build-on-Bluesky-first
-      pattern). This is a new *read* path — nothing like it exists yet;
-      `pipeline/` currently only ever writes outward.
+- [x] Pull mentions/replies via the platform API — done.
+      `pipeline/notifications.py`'s `get_notifications(client)` calls
+      Bluesky's notifications endpoint filtered server-side to
+      mentions/replies; `check_notifications.py` (repo root, mirrors
+      `driver.py`'s shape) logs in and prints them. First real *read*
+      path in the project — `pipeline/` had only ever written outward
+      before this. Verified against the real account (0 notifications
+      currently, as expected with 0 followers). No filtering, drafting,
+      or memory yet — just visibility.
 - [ ] Content filtering before anything reaches review: skip
       harassment/hate/spam/explicit content, same spirit as the interest
       exclusions already made when setting up the Bluesky account
