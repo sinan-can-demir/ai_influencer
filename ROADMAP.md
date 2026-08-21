@@ -263,11 +263,16 @@ decision once the reactive system has run long enough to trust.
       before this. Verified against the real account (0 notifications
       currently, as expected with 0 followers). No filtering, drafting,
       or memory yet — just visibility.
-- [ ] Content filtering before anything reaches review: skip
-      harassment/hate/spam/explicit content, same spirit as the interest
-      exclusions already made when setting up the Bluesky account
-      (Politics/Finance were deliberately skipped as high-controversy,
-      low-fit for an earnest persona).
+- [x] Content filtering before anything reaches review — done.
+      `CONTENT_FILTER_SYSTEM_PROMPT` (persona.py) +
+      `should_surface_notification()` (draft.py, built on
+      `generate_text()`) skip harassment/hate/spam/explicit content
+      while still surfacing critical or disagreeing messages —
+      disagreement alone isn't grounds to discard something. Same spirit
+      as the interest exclusions already made when setting up the
+      Bluesky account (Politics/Finance were deliberately skipped as
+      high-controversy, low-fit for an earnest persona).
+      `check_notifications.py` only prints notifications that pass.
 - [ ] Reply drafts go through the same draft-and-approve gate as original
       posts — no exception, no auto-reply, even for reactive mentions.
       Likely surfaces as a review queue ("3 pending replies") rather than
