@@ -151,10 +151,11 @@ Now give the persona a consistent face/look for images.
       added right after, but gated behind an explicit `input("Post this?
       y/n")` confirmation, same category as the image-inclusion prompt.
       That distinction (auto-posting vs. a real human checkpoint) is why
-      it was safe to add in the same file. `driver.py` now supersedes
-      `bluesky_test.py` as the actual posting tool — `bluesky_test.py`
-      stays for now as a manual fallback, to be retired later. Along the
-      way, `pipeline/` became a real Python package
+      it was safe to add in the same file. `driver.py` superseded
+      `bluesky_test.py` as the actual posting tool; `bluesky_test.py` has
+      since been removed (it was a one-off connectivity test, not a
+      dedicated tool, and had no remaining references anywhere in the
+      codebase). Along the way, `pipeline/` became a real Python package
       (`pipeline/__init__.py`, internal imports switched to explicit
       `from pipeline.x import y`), resolving the import/path
       inconsistency that had been flagged twice before — single-file
