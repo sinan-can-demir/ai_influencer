@@ -1,8 +1,8 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT
-from pipeline.history import get_recent_posts
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT
+from pipeline.history import get_recent_posts, get_recent_memories
 from dotenv import load_dotenv
 from datetime import date
 import os
@@ -15,7 +15,7 @@ def groq_client() -> Groq:
     print("Groq client initialized.")
     return client
 
-def generate_text(system_prompt, user_content):
+def generate_text(system_prompt, user_content) -> str:
     client = groq_client()
     response = client.chat.completions.create(
         model=DRAFT_MODEL,
@@ -27,37 +27,44 @@ def generate_text(system_prompt, user_content):
     print("Text generated: success")
     return response.choices[0].message.content
 
-def generate_draft():
+def generate_draft() -> str:
     day = date.today()
     recent_posts = get_recent_posts()
     recent_text = "\n".join(recent_posts)
-    content = generate_text(SYSTEM_PROMPT, f"today is {day}. here's what you posted recently:\n{recent_text}\nwrite today's post")
+    recent_memories= get_recent_memories()
+    memory_text = "\n".join(recent_memories)
+    content = generate_text(SYSTEM_PROMPT, f"today is {day}. here's what you posted recently:\n{recent_text}\nhere's what you remember from recent conversations:\n{memory_text}\nwrite today's post")
     print("Draft generated: success")
     return content
 
-def generate_image_prompt(post_text):
+def generate_image_prompt(post_text) -> str:
     content = generate_text(IMAGE_SYSTEM_PROMPT, post_text)
     print("Image promt generated: success")
     return content
 
-def should_generate_image(post_text):
+def should_generate_image(post_text) -> bool:
     decision = generate_text(IMAGE_DECISION_SYSTEM_PROMPT, post_text)
     print("Image decision made: success")
     return decision.strip().lower() == "yes"
 
-def generate_alt_text(image_prompt):
+def generate_alt_text(image_prompt) -> str:
     content = generate_text(ALT_TEXT_SYSTEM_PROMPT, image_prompt)
     print("Alt text generated: success")
     return content
 
-def should_surface_notification(text):
+def should_surface_notification(text) -> bool:
     decision = generate_text(CONTENT_FILTER_SYSTEM_PROMPT,  text)
     print("Decision made: success")
     return decision.strip().lower() == "yes"
 
-def generate_reply(notification_text):
+def generate_reply(notification_text) -> str:
     content = generate_text(REPLY_SYSTEM_PROMPT, notification_text)
     print("Reply text generated: success")
+    return content
+
+def generate_memory_entry(exchange_text):
+    content = generate_text(MEMORY_SYSTEM_PROMPT, exchange_text)
+    print("Memory entry generated: success")
     return content
 
 if __name__ == "__main__":

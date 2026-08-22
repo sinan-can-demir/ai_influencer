@@ -1,16 +1,19 @@
 
 from pipeline.notifications import build_reply_ref, get_notifications
-from pipeline.history import log_post
+from pipeline.history import log_post, log_memory
 from driver import get_bluesky_account, get_bluesky_client, login
-from pipeline.draft import should_surface_notification, generate_reply
+from pipeline.draft import should_surface_notification, generate_reply, generate_memory_entry
 
 
 
-def post_reply(client, reply_text, notification):
+def post_reply(client, reply_text, notification) -> None:
     reply_to = build_reply_ref(notification)
     post = client.send_post(text=reply_text, reply_to=reply_to)
     print(f"Reply posted: success \n {post.uri}")
     log_post(reply_text, post.uri)
+    exchange_text = f"they said: {notification.record.text}\ni replied: {reply_text}"
+    memory_summary = generate_memory_entry(exchange_text)
+    log_memory(notification.author.handle, memory_summary)
 
 def main():
     client = get_bluesky_client()
