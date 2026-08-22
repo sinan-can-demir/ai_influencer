@@ -273,11 +273,20 @@ decision once the reactive system has run long enough to trust.
       Bluesky account (Politics/Finance were deliberately skipped as
       high-controversy, low-fit for an earnest persona).
       `check_notifications.py` only prints notifications that pass.
-- [ ] Reply drafts go through the same draft-and-approve gate as original
-      posts — no exception, no auto-reply, even for reactive mentions.
-      Likely surfaces as a review queue ("3 pending replies") rather than
-      one-at-a-time like `driver.py`'s current single-post flow, since
-      replies can arrive in a batch.
+- [x] Reply drafts go through the same draft-and-approve gate as original
+      posts — done. `REPLY_SYSTEM_PROMPT` + `generate_reply()` (built on
+      `generate_text()`) write the reply; `reply_review.py` (repo root)
+      loops every notification that passes the content filter, drafts a
+      reply for each, and gates posting behind a y/n per item — no
+      exception, no auto-reply. `build_reply_ref()`
+      (`pipeline/notifications.py`) constructs the root/parent
+      `StrongRef`s Bluesky needs to thread the reply correctly. Verified
+      in pieces (reply generation against real Groq calls, ref-building
+      against synthetic data, the full script end to end with 0 real
+      notifications) — the actual `send_post(reply_to=...)` call hasn't
+      been exercised against a live incoming mention yet, since the
+      account currently has 0 followers. First real mention will be the
+      true end-to-end test.
 - [ ] **Juno's own memory file** — distinct from `data/post_history.jsonl`
       (which is a posting audit log, not self-knowledge). Tracks things
       like: specific people she's talked to and what about, running
