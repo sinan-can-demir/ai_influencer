@@ -287,18 +287,21 @@ decision once the reactive system has run long enough to trust.
       been exercised against a live incoming mention yet, since the
       account currently has 0 followers. First real mention will be the
       true end-to-end test.
-- [ ] **Juno's own memory file** — distinct from `data/post_history.jsonl`
-      (which is a posting audit log, not self-knowledge). Tracks things
-      like: specific people she's talked to and what about, running
-      themes she's been exploring, self-observations that accumulate over
-      time. This is the mechanism for real character evolution: instead
-      of growth being purely narrative (what she happens to write about),
-      accumulated memory gets fed back into future `generate_draft()`/
-      reply-generation calls, the same way `get_recent_posts()` already
-      feeds bounded context in — just deeper and more structured than
-      "last 5 posts." Exact schema (jsonl vs. something richer, what
-      counts as memory-worthy) is a design task for when this gets built,
-      not decided here.
+- [x] **Juno's own memory file** — done, v1 scope. `data/memory.jsonl`
+      stores one entry per reply (who she talked to, what it was about),
+      written in her own first-person voice via `MEMORY_SYSTEM_PROMPT` +
+      `generate_memory_entry()` (draft.py); `log_memory()` /
+      `get_recent_memories()` (history.py) persist and read it back,
+      mirroring `log_post()`/`get_recent_posts()`. `generate_draft()` now
+      pulls recent memories into its prompt the same way it already
+      pulls recent posts — this is the actual character-evolution
+      mechanism: what she remembers from conversations can shape what
+      she posts about next, not just narrative window-dressing. Scope
+      cut for v1: automatic on every reply, no separate "is this
+      memorable" judgment call (memory noise isn't a real problem yet at
+      near-zero reply volume). "Running themes" / general
+      self-observation entries beyond replies are a reasonable future
+      addition, not built here.
 - [ ] Proactive engagement (Juno browsing the platform and initiating
       replies to posts she wasn't tagged in) — explicitly deferred until
       the reactive system above has been running and trusted. Bigger
