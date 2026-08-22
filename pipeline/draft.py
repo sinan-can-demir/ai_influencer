@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT
 from pipeline.history import get_recent_posts
 from dotenv import load_dotenv
 from datetime import date
@@ -54,6 +54,11 @@ def should_surface_notification(text):
     decision = generate_text(CONTENT_FILTER_SYSTEM_PROMPT,  text)
     print("Decision made: success")
     return decision.strip().lower() == "yes"
+
+def generate_reply(notification_text):
+    content = generate_text(REPLY_SYSTEM_PROMPT, notification_text)
+    print("Reply text generated: success")
+    return content
 
 if __name__ == "__main__":
     print(generate_draft())
