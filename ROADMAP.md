@@ -302,15 +302,68 @@ decision once the reactive system has run long enough to trust.
       near-zero reply volume). "Running themes" / general
       self-observation entries beyond replies are a reasonable future
       addition, not built here.
-- [ ] Proactive engagement (Juno browsing the platform and initiating
-      replies to posts she wasn't tagged in) — explicitly deferred until
-      the reactive system above has been running and trusted. Bigger
-      feature: needs timeline browsing plus real judgment about what's
-      worth engaging with, and carries more reputational risk if that
-      judgment is ever wrong. Do not build this alongside reactive
-      replies; revisit as its own deliberate decision once reactive is
-      proven, matching how autonomy itself stays a deliberate, separate
-      decision (see "Explicitly out of scope for now").
+- [ ] **Proactive engagement** — Juno browsing the platform and
+      initiating comments on posts she wasn't tagged in. Fully scoped
+      below; **not started**, explicitly gated behind reactive being
+      *proven*: at least 5 real replies posted via `reply_review.py`,
+      spanning at least 2 weeks of real operation, with no safety
+      incidents (no harassment slipping past the content filter, no
+      tone/factual mistake serious enough to need a takedown). That bar
+      is clearly not met yet — reactive has 0 real mentions tested so
+      far, since the account has 0 followers. Do not build this
+      alongside reactive replies.
+      - **Discovery:** `search_posts(q=..., limit=...)` (confirmed to
+        exist on the installed `atproto` SDK) against a small fixed list
+        of query terms drawn from Juno's declared Bluesky interests
+        (Culture, Comedy, Music, Food, Nature) and her growing-up-arc
+        content pillars — a plain constant list, not a dynamic topic
+        model. Candidate home: `pipeline/notifications.py` (already
+        holds Bluesky-specific read logic), or a new
+        `pipeline/discovery.py` if that file gets crowded.
+      - **Two-stage judgment**, same `generate_text()` pattern as
+        `should_generate_image()`/`should_surface_notification()`:
+        `should_engage_with_post()` (topical fit — does this genuinely
+        connect to something Juno cares about, new
+        `PROACTIVE_TOPIC_FIT_SYSTEM_PROMPT`) and
+        `is_post_safe_to_engage()` (reuses `CONTENT_FILTER_SYSTEM_PROMPT`'s
+        spirit but reworded for an arbitrary candidate post rather than a
+        message sent to Juno, plus excludes Politics/Finance-adjacent
+        content, matching the account's existing declared exclusions;
+        new `PROACTIVE_SAFETY_SYSTEM_PROMPT`). Kept as two separate
+        calls rather than merged, since they're different questions with
+        different failure modes.
+      - **Comment generation:** `generate_proactive_comment()`, built on
+        `generate_text()` like `generate_reply()`, with a new
+        `PROACTIVE_ENGAGEMENT_SYSTEM_PROMPT` — frames it as "noticed this
+        and wanted to add a genuine related thought," not answering a
+        direct question. Low-key, non-intrusive, same voice constraints
+        as always.
+      - **Rate/safety bounds** (code-level, not LLM-judged): a low cap on
+        candidates per discovery run (start at 1); skip authors already
+        engaged with recently (check `person` entries in
+        `data/memory.jsonl`); skip high-engagement/already-viral posts
+        (proxy for contentious, higher backlash risk — exact
+        `search_posts()` metric field names to confirm when building);
+        a simple, obvious kill switch to disable proactive discovery
+        instantly.
+      - **Execution model:** split discovery from review, since discovery
+        needs to run on a schedule (unlike reactive, which triggers off
+        an incoming notification) and the human-review gate blocks on
+        `input()`, which can't run unattended in a cron job. A scheduled
+        bash-wrapped script runs discovery → judgment → generation and
+        writes surviving candidates to a new `data/pending_proactive.jsonl`
+        — it never posts anything itself. A separate review step (CLI
+        mirroring `reply_review.py`, or a new `review_ui.py` tab) shows
+        each candidate's original post + Juno's proposed comment and
+        gates posting behind the same explicit human approval as
+        everywhere else — no exception.
+      - **Memory reuse:** on approval + post, log via the existing
+        `generate_memory_entry()`/`log_memory()`, same mechanism reactive
+        replies already use.
+      - **Autonomy reaffirmed:** discovery/drafting can run unattended;
+        posting never can, matching how autonomy itself stays a
+        deliberate, separate decision (see "Explicitly out of scope for
+        now").
 
 **On the current architecture, for context:** `generate_draft()` and
 `generate_image_prompt()` are both single-shot calls to
