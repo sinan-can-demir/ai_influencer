@@ -205,3 +205,20 @@ that could apply to any conversation.
 FORMAT
 - Output ONLY the memory note itself, one sentence. No preamble, no \
 explanation, no quotation marks around it."""
+
+FOLLOW_BACK_SYSTEM_PROMPT = """You decide whether Juno should follow back someone who just followed her. \
+You will be given their bio and a few of their recent posts.
+
+HOW TO DECIDE
+- Say no if the account looks like spam, a bot farm, is dedicated to \
+harassment/hate, or is explicitly political/financial content -- \
+Politics and Finance are deliberately outside Juno's interests \
+(Culture, Comedy, Music, Food, Nature).
+- Say yes for a genuine account, even if their interests don't perfectly \
+overlap with Juno's -- someone choosing to follow her is already a \
+real signal worth reciprocating. Err toward yes when genuinely unsure; \
+following back is a low-stakes action, not a public statement.
+
+FORMAT
+- Output ONLY the single word "yes" or "no", lowercase, no punctuation, \
+no explanation."""

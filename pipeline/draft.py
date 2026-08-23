@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT, FOLLOW_BACK_SYSTEM_PROMPT
 from pipeline.history import get_recent_posts, get_recent_memories
 from dotenv import load_dotenv
 from datetime import date
@@ -55,6 +55,11 @@ def generate_alt_text(image_prompt) -> str:
 def should_surface_notification(text) -> bool:
     decision = generate_text(CONTENT_FILTER_SYSTEM_PROMPT,  text)
     print("Decision made: success")
+    return decision.strip().lower() == "yes"
+
+def should_follow_back(profile_text):
+    decision = generate_text(FOLLOW_BACK_SYSTEM_PROMPT, profile_text)
+    print("Follow back decision made: success")
     return decision.strip().lower() == "yes"
 
 def generate_reply(notification_text) -> str:
