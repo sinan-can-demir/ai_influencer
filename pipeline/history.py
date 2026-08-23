@@ -7,6 +7,7 @@ os.makedirs("data",exist_ok=True)
 HISTORY_PATH="data/post_history.jsonl"
 IMAGE_HISTORY_PATH="data/image_history.jsonl"
 MEMORY_PATH="data/memory.jsonl"
+FOLLOW_PATH="data/follows.jsonl"
 
 def log_post(text, uri) -> None:
     
@@ -21,7 +22,7 @@ def log_post(text, uri) -> None:
     with open(HISTORY_PATH,"a") as file:
         file.write(json.dumps(log) + "\n")
 
-    print("Post logged succesfully: success")
+    print("Post logged: success")
 
 def get_recent_posts(n=5) -> list:
     results = []
@@ -51,7 +52,7 @@ def log_image(prompt, reference_images, seed, output_path) -> None:
 
     with open(IMAGE_HISTORY_PATH,"a") as file:
         file.write(json.dumps(log) + "\n")
-    print("Image logged succesfully: success")
+    print("Image logged: success")
 
 def log_memory(person, summary) -> None:
     timestamp = datetime.now().isoformat()
@@ -62,7 +63,7 @@ def log_memory(person, summary) -> None:
     }
     with open(MEMORY_PATH,"a") as file:
         file.write(json.dumps(log) + "\n")
-    print("Memory logged succesfully: success")
+    print("Memory logged: success")
 
 def get_recent_memories(n=5) -> list:
     memory= []
@@ -79,3 +80,14 @@ def get_recent_memories(n=5) -> list:
         memory.append(f"talked with {record['person']} about: {record['summary']}")
     print("Memory created: success")
     return memory
+
+def log_follow(handle, did) -> None:
+    timestamp = datetime.now().isoformat()
+    log = {
+        "timestamp": timestamp,
+        "handle": handle,
+        "did": did
+    }
+    with open(FOLLOW_PATH, "a") as file:
+        file.write(json.dumps(log) + "\n")
+    print("Follow logged: success")
