@@ -268,6 +268,19 @@ held up as genuine, apolitical fits for Juno's declared interests:
 `thejokebot.bsky.social` (dad-joke bot), `jillybee72.bsky.social`
 (improv comedy) — all 3 followed live.
 
+Also `follow_back.py` (repo root): judges and follows back new
+followers automatically, no per-item human approval — same reasoning as
+above, a follow-back generates no public content so it doesn't carry
+reply/comment-level stakes. `should_follow_back()` (draft.py, new
+`FOLLOW_BACK_SYSTEM_PROMPT`) checks a new follower's bio + recent posts
+(via `get_author_feed()`), skips spam/bot-farms/harassment/political-or-
+financial content, errs toward yes otherwise. `get_new_followers()`
+(pipeline/notifications.py) filters to followers Juno doesn't already
+follow back. Verified end to end (correctly finds 0 candidates right
+now — Juno's one follower, `thejokebot`, is already followed back); the
+actual judge-and-follow path hasn't fired against a live new-follower
+case yet.
+
 - [x] Pull mentions/replies via the platform API — done.
       `pipeline/notifications.py`'s `get_notifications(client)` calls
       Bluesky's notifications endpoint filtered server-side to
