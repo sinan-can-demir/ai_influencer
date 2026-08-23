@@ -254,6 +254,20 @@ Give Juno a way to notice and respond to people, not just post outward.
 Reactive first, deliberately — proactive engagement is a later, separate
 decision once the reactive system has run long enough to trust.
 
+**Adjacent, done outside this phase's scope:** `follow_accounts.py`
+(repo root) has Juno follow a small, manually-curated list of real
+accounts — a legitimate, low-risk way to get initial visibility,
+distinct from (and much lower-risk than) proactive engagement below.
+`log_follow()`/`data/follows.jsonl` (history.py) log it, mirroring
+`log_post()`. Candidates were sourced from Bluesky starter-pack
+directories, then verified one by one against the real API rather than
+trusted as scraped — most turned out to be personal accounts with
+political bios despite matching category tags. Only 3 of 14 checked
+held up as genuine, apolitical fits for Juno's declared interests:
+`epollard.bsky.social` (biodiversity/butterfly conservation),
+`thejokebot.bsky.social` (dad-joke bot), `jillybee72.bsky.social`
+(improv comedy) — all 3 followed live.
+
 - [x] Pull mentions/replies via the platform API — done.
       `pipeline/notifications.py`'s `get_notifications(client)` calls
       Bluesky's notifications endpoint filtered server-side to
