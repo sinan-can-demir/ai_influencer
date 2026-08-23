@@ -32,6 +32,52 @@ Get the boring stuff decided once so later phases don't stall on it.
       dollars/month) — verify current pricing before committing, but it's no
       longer the blocker it used to be. Deferred until Bluesky pipeline is
       proven out.
+- [ ] **Threads, scoped as a real alternative to X (not yet built).**
+      Considered instead of Instagram specifically because Threads is
+      text-first with replies and a character limit — structurally close
+      to Bluesky/X, unlike Instagram's image/carousel-first model, which
+      would need real pipeline rework (mandatory images, different
+      comment/DM engagement shape). The free-vs-paid tradeoff versus X is
+      really free-but-more-setup vs. paid-but-simpler-integration, not
+      free-with-no-cost:
+      - **API cost:** $0 — no dollar cost found in Meta's docs for the
+        Threads API (unlike X's pay-as-you-go pricing above).
+      - **Setup, verified against Meta's own docs:** full Meta App Review
+        is normally required before an app can act on other users'
+        accounts, **but is skippable for a single self-owned account** by
+        adding Juno's Threads account as a "Threads Tester" on the
+        developer app — no waiting on Meta's review process. Still real
+        one-time setup: create a Meta Developer app with the Threads use
+        case, add the Tester, implement the OAuth authorization-window
+        flow (different auth model than Bluesky's simple handle + app
+        password), exchange for a short-lived token (1hr) then a
+        long-lived token (60 days).
+      - **Real ongoing maintenance risk, not present on Bluesky:** the
+        long-lived token isn't permanent — it must be refreshed via
+        `POST https://graph.threads.net/refresh_access_token` between 24
+        hours and 60 days after issue, or it's **permanently dead** and
+        requires the full manual re-authorization flow again. Needs
+        either a scheduled refresh job or a very reliable manual
+        reminder before this is safe to rely on — a genuinely new
+        operational concern this project hasn't had to handle before.
+      - **Publishing model differs from `atproto`'s single-call
+        `send_post()`:** a two-step container flow — `POST /threads` to
+        create a container (`media_type`: TEXT/IMAGE/VIDEO/CAROUSEL),
+        then `POST /threads_publish` with the returned `creation_id`.
+      - **Scopes needed:** `threads_basic` (required for all endpoints),
+        `threads_content_publish` (posting), `threads_manage_replies`
+        (replying) — a near-direct match to what `driver.py`/
+        `reply_review.py` already do on Bluesky.
+      - **Rate limit:** 250 posts/24h per profile — far more than this
+        project's actual posting volume, not a real constraint.
+      - **Likely architecture:** a new `pipeline/threads_client.py` (or
+        similar), mirroring how `pipeline/notifications.py` holds
+        Bluesky-specific logic — `generate_draft()`/`generate_reply()`/
+        `should_generate_image()` etc. are all platform-agnostic already
+        and should port over directly; only the posting/auth/notification
+        layer is genuinely new.
+      Not started — this is scoping only, same as Phase 5 was before it
+      was built.
 - [x] Prototype against Bluesky (AT Protocol) first — account created
       (junogrows.bsky.social), app password scoped without DM access,
       connectivity verified end-to-end via `bluesky_test.py`.
@@ -41,7 +87,9 @@ Get the boring stuff decided once so later phases don't stall on it.
       model `openai/gpt-oss-120b`.
 
 **Concepts:** API key hygiene / never committing secrets, X API tiers &
-rate limits, what a "developer app" even is on X.
+rate limits, what a "developer app" even is on X, OAuth token lifecycles
+(short-lived vs. long-lived vs. permanent) as a different model from
+Bluesky's app passwords.
 
 ---
 
