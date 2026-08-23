@@ -29,11 +29,11 @@ def generate_text(system_prompt, user_content) -> str:
 
 def generate_draft() -> str:
     day = date.today()
-    recent_posts = get_recent_posts()
+    recent_posts = get_recent_posts(n=10)
     recent_text = "\n".join(recent_posts)
     recent_memories= get_recent_memories()
     memory_text = "\n".join(recent_memories)
-    content = generate_text(SYSTEM_PROMPT, f"today is {day}. here's what you posted recently:\n{recent_text}\nhere's what you remember from recent conversations:\n{memory_text}\nwrite today's post")
+    content = generate_text(SYSTEM_PROMPT, f"today is {day}. here's what you posted recently:\n{recent_text}\nvary your structure from these -- don't repeat the same opening, rhythm, or ending shape.\nhere's what you remember from recent conversations:\n{memory_text}\nwrite today's post")
     print("Draft generated: success")
     return content
 
