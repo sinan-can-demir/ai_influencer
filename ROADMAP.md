@@ -60,8 +60,9 @@ yet — output can just print to console or write to a file you copy-paste.
       `get_recent_posts`), storage bounded separately from what's fed to
       the LLM (`data/post_history.jsonl` grows unbounded, only the last 5
       posts get fed into the prompt). Verified end to end.
-- [ ] Manually post a handful of approved drafts (Bluesky for now, X once
-      added) by hand, see how they read in the wild — two posted so far.
+- [x] Manually post a handful of approved drafts and see how they read
+      in the wild — done, 12+ real posts on Bluesky as of this writing.
+      X still pending Phase 0's Developer App.
 
 **Concepts:** system prompts vs. user prompts, prompt engineering for voice
 consistency, context windows, why "memory" for an LLM app is usually just
@@ -186,8 +187,9 @@ Replace "print to console" with something you'd actually want to use daily.
       (`driver.py`'s `post_draft()`, human-gated behind a CLI prompt,
       verified end to end with a real live post). Still open for X once
       Phase 0's X Developer App is provisioned.
-- [ ] Basic logging: what was posted, when, and the draft that produced it
-      (a flat file or SQLite is enough — no need for a real database yet).
+- [x] Basic logging: what was posted, when, and the draft that produced
+      it — done, `log_post()`/`data/post_history.jsonl` (a flat JSONL
+      file, no database needed).
 
 **Ideas to consider for this phase (not committed to yet):**
 - An `editor.py`-style second LLM pass that critiques/polishes a draft
