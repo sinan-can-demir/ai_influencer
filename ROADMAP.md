@@ -76,6 +76,15 @@ Get the boring stuff decided once so later phases don't stall on it.
         `should_generate_image()` etc. are all platform-agnostic already
         and should port over directly; only the posting/auth/notification
         layer is genuinely new.
+      - **Idea flagged, not scoped:** once Threads has a real, working
+        client alongside Bluesky's, worth looking at whether `driver.py`/
+        `review_ui.py` should unify into a joint review flow (pick a
+        platform, or post to both) instead of parallel platform-specific
+        drivers. Deliberately not designed in detail yet — there's no
+        second real implementation to design the shared shape against,
+        same reasoning as why `generate_text()` wasn't extracted until
+        two real call sites already existed. Revisit once Threads
+        actually has a working `threads_driver.py` to compare against.
       Not started — this is scoping only, same as Phase 5 was before it
       was built.
 - [x] Prototype against Bluesky (AT Protocol) first — account created
