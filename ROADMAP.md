@@ -340,6 +340,26 @@ now — Juno's one follower, `thejokebot`, is already followed back); the
 actual judge-and-follow path hasn't fired against a live new-follower
 case yet.
 
+**Scoped, not built: topic-based discovery for who to follow.**
+Automates what `follow_accounts.py` currently does manually (a
+hand-picked handle list) using `search_posts()` against the same
+interest terms already sketched for proactive engagement below — but
+pulls the post's *author* as a follow candidate, never the post itself
+for commenting. This is deliberately **not** proactive engagement and
+doesn't wait on its gate: the risk proactive engagement guards against
+is generating public content directed at a stranger unprompted, and
+following someone does neither — same low-stakes category as
+`follow_back.py`, which already runs automatically. Design:
+- Discovery: `search_posts(q=...)`, extract authors.
+- Judgment: reuse `should_follow_back()` as-is — written generically
+  ("is this a good fit to follow," bio + recent posts, skip
+  spam/political), doesn't care why an account is being considered, so
+  no new prompt should be needed.
+- Rate limits: same conservative posture as everything else — low cap
+  per run, skip accounts already followed (`viewer.following`, same
+  check `get_new_followers()` already does).
+- Runs automatically, no new approval gate, same as `follow_back.py`.
+
 - [x] Pull mentions/replies via the platform API — done.
       `pipeline/notifications.py`'s `get_notifications(client)` calls
       Bluesky's notifications endpoint filtered server-side to
