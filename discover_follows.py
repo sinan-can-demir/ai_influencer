@@ -20,7 +20,8 @@ def main():
         for author, post_text in candidates:
             if followed_count >= MAX_NEW_FOLLOWS_PER_RUN:
                 break
-            profile_text = f"post: {post_text}"
+            profile = client.get_profile(author.handle)
+            profile_text = f"bio: {profile.description}\npost: {post_text}"
             if should_follow_back(profile_text):
                 follow_account(client, author.handle)
                 followed_count += 1
