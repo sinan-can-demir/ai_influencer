@@ -17,3 +17,15 @@ def get_new_followers(client, actor):
     new_followers = [f for f in response.followers if f.viewer.following is None]
     print("Get new followers: success")
     return new_followers
+
+def search_candidate_authors(client, query, limit=10):
+    result = client.app.bsky.feed.search_posts(params={"q" : query, "limit": limit})
+    seen = set()
+    candidates = []
+    for post in result.posts:
+        author = post.author
+        if author.viewer.following is None and author.handle not in seen:
+            seen.add(author.handle)
+            candidates.append((author, post.record.text))
+    print("Search candidate authors: success")
+    return candidates
