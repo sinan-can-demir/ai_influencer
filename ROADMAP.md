@@ -340,25 +340,38 @@ now — Juno's one follower, `thejokebot`, is already followed back); the
 actual judge-and-follow path hasn't fired against a live new-follower
 case yet.
 
-**Scoped, not built: topic-based discovery for who to follow.**
-Automates what `follow_accounts.py` currently does manually (a
-hand-picked handle list) using `search_posts()` against the same
-interest terms already sketched for proactive engagement below — but
-pulls the post's *author* as a follow candidate, never the post itself
-for commenting. This is deliberately **not** proactive engagement and
-doesn't wait on its gate: the risk proactive engagement guards against
-is generating public content directed at a stranger unprompted, and
-following someone does neither — same low-stakes category as
-`follow_back.py`, which already runs automatically. Design:
-- Discovery: `search_posts(q=...)`, extract authors.
-- Judgment: reuse `should_follow_back()` as-is — written generically
-  ("is this a good fit to follow," bio + recent posts, skip
-  spam/political), doesn't care why an account is being considered, so
-  no new prompt should be needed.
-- Rate limits: same conservative posture as everything else — low cap
-  per run, skip accounts already followed (`viewer.following`, same
-  check `get_new_followers()` already does).
-- Runs automatically, no new approval gate, same as `follow_back.py`.
+**Topic-based discovery for who to follow — done.**
+`discover_follows.py` (repo root) automates what `follow_accounts.py`
+did manually: `search_candidate_authors()` (`pipeline/notifications.py`)
+runs `search_posts()` against a fixed interest-term list, pulls each
+matched post's *author* as a follow candidate (never the post for
+commenting — deliberately **not** proactive engagement, doesn't wait on
+its gate, since the risk that gates proactive engagement is generating
+public content directed at a stranger unprompted, and following does
+neither). `should_follow_back()` reused as-is for judgment. Rate-capped
+at 2 new follows/run. Runs automatically, no approval gate, same as
+`follow_back.py`.
+
+Two real bugs surfaced and fixed while building this:
+- `search_posts()`'s lighter `ProfileViewBasic` author objects lack a
+  `description` field (unlike `get_profile()`'s fuller type) — judging
+  candidates on post text alone let an automated Bridgy Fed news-bot
+  through twice, since its post content read as genuinely on-topic with
+  no bot signal visible. Fixed by fetching the full profile via
+  `get_profile()` per candidate before judgment, same as `follow_back.py`
+  already does — verified the bot's real bio ("bridged from... follow
+  @ap.brid.gy to interact") now correctly gets rejected.
+- **A real reliability bug in `follow_account()` itself, not specific to
+  this feature:** `client.follow()` can return a false-positive success
+  response (valid `uri`/`cid`) for a write that never actually persists
+  to the repo — confirmed via direct `com.atproto.repo.list_records`
+  queries (ground truth, bypassing the AppView's separately-lagging
+  `viewer.following`/`get_follows()` reads). Two follows silently failed
+  this way. `follow_account()` (`follow_accounts.py`) now verifies via a
+  new `is_already_following()` helper (checks the actual repo) and
+  retries once before logging success — this fix benefits every caller
+  (`follow_accounts.py`, `follow_back.py`, `discover_follows.py`), not
+  just this feature.
 
 - [x] Pull mentions/replies via the platform API — done.
       `pipeline/notifications.py`'s `get_notifications(client)` calls
