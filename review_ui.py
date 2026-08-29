@@ -35,7 +35,7 @@ if st.button("Generate Draft"):
         st.session_state.image_path, st.session_state.image_alt = image_pipeline(st.session_state.draft_text)
 
 if st.session_state.draft_text is not None:
-    st.text_area("Draft", key="draft_text", height=150)
+    st.session_state.draft_text = st.text_area("Draft", value=st.session_state.draft_text, height=150)
 
     if st.session_state.image_path:
         st.image(st.session_state.image_path)
