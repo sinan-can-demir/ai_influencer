@@ -23,7 +23,7 @@ def enqueue_draft(text, image_path, image_alt) -> None:
 
     print("Queue logged: success")
 
-def pop_next_draft() -> dict:
+def peek_next_draft() -> dict:
     results = []
     try:
         with open(QUEUE_PATH, "r") as file:
@@ -37,11 +37,26 @@ def pop_next_draft() -> dict:
         results.append(record)
 
     if not results: return None
-    # Type: dict post variable
-    post = results.pop(0)
+    print("Peek next draft: success")
+    return results[0]
+
+def pop_next_draft() -> None:
+    results = []
+    try:
+        with open(QUEUE_PATH, "r") as file:
+            queue_lines = file.readlines()
+    except FileNotFoundError:
+        print("No queue file found")
+        return None
+
+    for line in queue_lines:
+        record = json.loads(line)
+        results.append(record)
+    if not results: return None
+    # pop the first item
+    results.pop(0)
 
     with open(QUEUE_PATH, "w") as file:
         for result in results:
             file.write(json.dumps(result) + "\n")
     print("Pop next draft: success")
-    return post
