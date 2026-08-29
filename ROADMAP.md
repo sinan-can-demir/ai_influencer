@@ -297,32 +297,50 @@ Replace "print to console" with something you'd actually want to use daily.
         to change — the poster script wouldn't, since it already
         doesn't know or care how an item got approved.
       - **Build order:**
-        - [ ] A small queue module (e.g. `pipeline/queue.py`) with two
-              functions: `enqueue_draft(text, image_path, image_alt)`
-              (append a JSON line, same pattern as `log_post()` in
-              `pipeline/history.py`) and `pop_next_draft()` (read the
-              oldest line, remove it from the file, return it as a
-              dict — or `None` if the queue is empty).
-        - [ ] **Decide pop-timing before wiring it into the poster:**
-              should `pop_next_draft()` remove the item from the file
-              immediately (simpler), or should the item only be removed
-              *after* a confirmed successful post (safer — a failed
-              post, e.g. Bluesky being down, currently would otherwise
-              silently lose that draft off the queue)? Worth resolving
-              deliberately, not defaulting into whichever is easiest to
-              write first.
-        - [ ] `review_ui.py`: add an "Approve for scheduled posting"
-              button next to the existing "Post" (posts immediately)
-              and "Reject" — calls `enqueue_draft()` instead of posting
-              live.
-        - [ ] New root script `scheduled_poster.py`, mirroring
-              `driver.py`'s posting half (`get_bluesky_client()` /
+        - [x] `pipeline/queue.py` — `enqueue_draft(text, image_path,
+              image_alt)` (append a JSON line, same pattern as
+              `log_post()` in `pipeline/history.py`). Done, tested.
+        - [x] **Pop-timing, resolved:** rather than one destructive
+              `pop_next_draft()`, the module has two functions —
+              `peek_next_draft()` (reads the oldest queued item,
+              returns it as a dict or `None`, **never touches the
+              file**) and `pop_next_draft()` (re-reads the file,
+              drops the oldest line, rewrites the rest, returns
+              nothing). This means a caller can peek, attempt to
+              post, and only call `pop_next_draft()` **after** a
+              confirmed successful post — a failed post (e.g. Bluesky
+              down) leaves the draft untouched in the queue for the
+              next run instead of silently losing it. Both functions
+              tested end to end: FIFO order, full dict round-trip
+              (`timestamp`/`text`/`image_path`/`image_alt`), and the
+              empty-queue / missing-file cases (both return `None`
+              instead of crashing — `pop_next_draft()` initially
+              crashed on an empty queue the same way `enqueue_draft`'s
+              predecessor once did, same `if not results: return None`
+              fix, added and reverified).
+        - [x] `review_ui.py`: "Approve for scheduled posting" button
+              added next to "Post" and "Reject" — calls
+              `enqueue_draft()` on the currently-reviewed draft, then
+              resets session state the same way "Reject" does (all
+              four fields, including `posted`, to avoid a stale
+              "Posted!" banner lingering from an earlier action).
+              Verified end to end with a real generated draft +
+              image — confirmed one clean entry in
+              `data/approved_queue.jsonl`, no duplicate on a second
+              (already-too-late) click.
+        - [ ] **`scheduled_poster.py` exists but is broken — fix this
+              first next session.** Skeleton is right (mirrors
+              `driver.py`'s posting half: `get_bluesky_client()` /
               `get_bluesky_account()` / `login()` / `post_draft()`,
-              reusable via import from `driver.py` the same way
-              `review_ui.py` already does) minus any generation logic —
-              it only ever posts what's already in the queue. If the
-              queue's empty, log that plainly and exit; it should never
-              generate a draft itself.
+              imported from `driver.py`), and `main()` already calls
+              `peek_next_draft()` → post → `pop_next_draft()` in the
+              correct order (matching the resolved pop-timing design
+              above — pop only fires after the post succeeds). **But
+              `peek_next_draft` is never imported** (line 2 only
+              imports `pop_next_draft`) — running it right now raises
+              `NameError: name 'peek_next_draft' is not defined`
+              immediately. One-line fix, not yet tested at all beyond
+              that — needs a real run once the import's fixed.
         - [ ] **Cron gotchas to handle, not skip:** cron runs with a
               minimal environment, not your interactive shell — the
               crontab entry needs the absolute path to the venv's
