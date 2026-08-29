@@ -177,6 +177,31 @@ Now give the persona a consistent face/look for images.
         version, another API-naming surprise).
 - [ ] If Step 2 consistency isn't good enough, escalate to training a
       small LoRA on the curated reference set (unchanged fallback plan).
+
+**Ideas to consider for `image_pipeline()`'s error handling (not committed
+to yet):** the current `except Exception` in `image_pipeline()`
+(`pipeline/image.py`) is deliberate and works well for interactive use —
+confirmed live when a HF ZeroGPU "no GPU available after 60s" timeout
+(a transient free-tier queue issue, not a code bug) was caught cleanly and
+degraded to `(None, None)` instead of crashing `review_ui.py`, with the
+per-step print breadcrumbs (`"X: success"` / `"X: failure"`) making it
+possible to pinpoint exactly which step failed just by reading the
+terminal. Two gaps in that design worth revisiting before anything in this
+project runs unattended (e.g. Phase 5's proactive engagement, which is
+cron-driven with no one watching stdout):
+  - The bare `except Exception` doesn't distinguish an expected external
+    failure (HF queue busy, network blip) from a real bug in the pipeline
+    code (e.g. a typo'd kwarg) — both print an identical
+    `"Image pipeline complete: failure"` line, and only the exception text
+    itself (visible in an interactive terminal, easy to miss otherwise)
+    tells them apart.
+  - Failures aren't persisted anywhere — only `print(f"Error: {e}")` to
+    stdout, nothing written to `data/image_history.jsonl` or elsewhere. No
+    way to later ask "how often does this fail, and on what error?" without
+    having been watching the terminal live when it happened.
+  Not urgent while a human is driving `review_ui.py`/`driver.py`
+  interactively — becomes relevant once something in this pipeline runs
+  unattended.
 - [x] **Log image generations**, same pattern as `pipeline/history.py`'s
       post logging: `IMAGE_HISTORY_PATH = "data/image_history.jsonl"` +
       `log_image(prompt, reference_images, seed, output_path)`, called
@@ -247,6 +272,72 @@ Replace "print to console" with something you'd actually want to use daily.
 - [x] Basic logging: what was posted, when, and the draft that produced
       it — done, `log_post()`/`data/post_history.jsonl` (a flat JSONL
       file, no database needed).
+- [ ] **Scheduled posting via an approved-queue.** Goal: posts go out at
+      consistent, human-like times instead of only whenever someone
+      happens to be at the terminal. Scoped, not started — build this
+      yourself function-by-function, ask for help per-step as needed.
+      Deliberately does **not** reopen "Full autonomy / unattended
+      posting" (see "Explicitly out of scope for now" below): a human
+      still approves every draft's content before it can ever post,
+      same as today. The only thing moving to a timer is the *posting
+      moment* of an already-approved draft, not the judgment of whether
+      it should exist.
+      - **Design:** an "approved queue" — `data/approved_queue.jsonl`,
+        one line per approved-but-not-yet-posted draft
+        (`{timestamp, text, image_path, image_alt}`). Different from
+        the existing JSONL logs in `pipeline/history.py` (which are
+        append-only, never read back except for the last N) because
+        items here need to be **removed** once posted — FIFO, oldest
+        approved goes out first.
+      - **Why this shape, not a simpler one:** keeps "what's allowed
+        into the queue" (today: human approval via `review_ui.py`)
+        fully decoupled from "what pulls off the queue and posts"
+        (`scheduled_poster.py`). If unattended posting is ever
+        deliberately revisited later, only the enqueue side would need
+        to change — the poster script wouldn't, since it already
+        doesn't know or care how an item got approved.
+      - **Build order:**
+        - [ ] A small queue module (e.g. `pipeline/queue.py`) with two
+              functions: `enqueue_draft(text, image_path, image_alt)`
+              (append a JSON line, same pattern as `log_post()` in
+              `pipeline/history.py`) and `pop_next_draft()` (read the
+              oldest line, remove it from the file, return it as a
+              dict — or `None` if the queue is empty).
+        - [ ] **Decide pop-timing before wiring it into the poster:**
+              should `pop_next_draft()` remove the item from the file
+              immediately (simpler), or should the item only be removed
+              *after* a confirmed successful post (safer — a failed
+              post, e.g. Bluesky being down, currently would otherwise
+              silently lose that draft off the queue)? Worth resolving
+              deliberately, not defaulting into whichever is easiest to
+              write first.
+        - [ ] `review_ui.py`: add an "Approve for scheduled posting"
+              button next to the existing "Post" (posts immediately)
+              and "Reject" — calls `enqueue_draft()` instead of posting
+              live.
+        - [ ] New root script `scheduled_poster.py`, mirroring
+              `driver.py`'s posting half (`get_bluesky_client()` /
+              `get_bluesky_account()` / `login()` / `post_draft()`,
+              reusable via import from `driver.py` the same way
+              `review_ui.py` already does) minus any generation logic —
+              it only ever posts what's already in the queue. If the
+              queue's empty, log that plainly and exit; it should never
+              generate a draft itself.
+        - [ ] **Cron gotchas to handle, not skip:** cron runs with a
+              minimal environment, not your interactive shell — the
+              crontab entry needs the absolute path to the venv's
+              `python` (not a bare `python`/`streamlit` that only
+              resolves because your shell's activated), and `cd` into
+              the repo directory first so relative paths (`data/...`,
+              `.env` via `load_dotenv()`) still resolve. Also redirect
+              output (`>> some.log 2>&1`) since cron output isn't
+              visible in any terminal — there's no "watch it run" the
+              way there is today.
+        - [ ] Manually test the full loop before trusting cron with it:
+              approve a draft in `review_ui.py`, run
+              `scheduled_poster.py` by hand and confirm it posts and
+              removes the item, then only after that works add the
+              actual crontab entry for your chosen times.
 
 **Ideas to consider for this phase (not committed to yet):**
 - An `editor.py`-style second LLM pass that critiques/polishes a draft
