@@ -103,3 +103,10 @@ assets/generated/    every image actually generated for a post
 docs/persona-brief.md   the character bible
 ROADMAP.md           phased build plan + detailed decision history
 ```
+
+## License
+
+[Mozilla Public License 2.0](LICENSE) — modifications to individual
+files must stay under MPL-2.0 and their source made available, but this
+code can be combined with proprietary code in a larger work without that
+larger work needing to be MPL-licensed itself.
