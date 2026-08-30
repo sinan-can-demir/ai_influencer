@@ -272,7 +272,7 @@ Replace "print to console" with something you'd actually want to use daily.
 - [x] Basic logging: what was posted, when, and the draft that produced
       it — done, `log_post()`/`data/post_history.jsonl` (a flat JSONL
       file, no database needed).
-- [ ] **Scheduled posting via an approved-queue.** Goal: posts go out at
+- [x] **Scheduled posting via an approved-queue.** Goal: posts go out at
       consistent, human-like times instead of only whenever someone
       happens to be at the terminal. Scoped, not started — build this
       yourself function-by-function, ask for help per-step as needed.
@@ -328,34 +328,49 @@ Replace "print to console" with something you'd actually want to use daily.
               image — confirmed one clean entry in
               `data/approved_queue.jsonl`, no duplicate on a second
               (already-too-late) click.
-        - [ ] **`scheduled_poster.py` exists but is broken — fix this
-              first next session.** Skeleton is right (mirrors
-              `driver.py`'s posting half: `get_bluesky_client()` /
+        - [x] `scheduled_poster.py` — done. Mirrors `driver.py`'s
+              posting half (`get_bluesky_client()` /
               `get_bluesky_account()` / `login()` / `post_draft()`,
-              imported from `driver.py`), and `main()` already calls
+              imported from `driver.py`); `main()` calls
               `peek_next_draft()` → post → `pop_next_draft()` in the
-              correct order (matching the resolved pop-timing design
-              above — pop only fires after the post succeeds). **But
-              `peek_next_draft` is never imported** (line 2 only
-              imports `pop_next_draft`) — running it right now raises
-              `NameError: name 'peek_next_draft' is not defined`
-              immediately. One-line fix, not yet tested at all beyond
-              that — needs a real run once the import's fixed.
-        - [ ] **Cron gotchas to handle, not skip:** cron runs with a
-              minimal environment, not your interactive shell — the
-              crontab entry needs the absolute path to the venv's
-              `python` (not a bare `python`/`streamlit` that only
-              resolves because your shell's activated), and `cd` into
-              the repo directory first so relative paths (`data/...`,
-              `.env` via `load_dotenv()`) still resolve. Also redirect
-              output (`>> some.log 2>&1`) since cron output isn't
-              visible in any terminal — there's no "watch it run" the
-              way there is today.
-        - [ ] Manually test the full loop before trusting cron with it:
-              approve a draft in `review_ui.py`, run
-              `scheduled_poster.py` by hand and confirm it posts and
-              removes the item, then only after that works add the
-              actual crontab entry for your chosen times.
+              correct order (pop only fires after the post succeeds,
+              per the resolved pop-timing design above). The initial
+              draft called `peek_next_draft()` without importing it
+              (`NameError` on run) — fixed, one-line import addition.
+              **Verified live, twice** — first real run posted the
+              queued "dishwasher/sparrow" draft to
+              `junogrows.bsky.social` and correctly popped it; a
+              second run (originally meant as an environment-only
+              sanity check, but run without first confirming — see
+              caution below) posted the "coffee mug" draft too. Both
+              were real, human-approved content from `review_ui.py`,
+              so nothing unreviewed went out, but it's a live-posting
+              side effect that should have been confirmed first
+              regardless of the stated testing intent.
+        - [x] **`--dry-run` flag added**, directly closing the gap that
+              caused the above: `scheduled_poster.py --dry-run` peeks
+              the queue and prints what would post, skipping
+              `post_draft()`/`pop_next_draft()` entirely. Verified: a
+              dry run leaves `data/approved_queue.jsonl` byte-for-byte
+              unchanged. This is now the only way this script should
+              ever be invoked for testing/plumbing purposes — a live
+              (non-dry-run) invocation always has a real Bluesky-posting
+              side effect and should be treated with the same care as
+              clicking "Post" in `review_ui.py`.
+        - [x] **Cron gotchas — handled, not skipped.** Installed
+              crontab entry (`crontab -l`):
+              `0 9,17 * * * cd /home/sinan/Desktop/projects/ai_influencer && /home/sinan/Desktop/projects/ai_influencer/.venv/bin/python scheduled_poster.py >> logs/scheduled_poster.log 2>&1`
+              — absolute venv `python` path (not a bare `python`, which
+              wouldn't resolve to the venv under cron's minimal
+              environment), explicit `cd` into the repo first (so
+              `data/...` and `.env` via `load_dotenv()` resolve), output
+              redirected to `logs/scheduled_poster.log` (new directory,
+              gitignored — runtime output, not tracked project data).
+              Fires twice daily (9am, 5pm); a fired run with an empty
+              queue is a harmless no-op (prints "Nothing to post").
+        - [x] Full loop manually tested before trusting cron with it —
+              done live (see above), both runs confirmed correct
+              posting + pop behavior against the real account.
 
 **Ideas to consider for this phase (not committed to yet):**
 - An `editor.py`-style second LLM pass that critiques/polishes a draft
