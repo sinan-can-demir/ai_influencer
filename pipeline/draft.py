@@ -58,6 +58,9 @@ def should_surface_notification(text) -> bool:
     return decision.strip().lower() == "yes"
 
 def should_follow_back(profile_text):
+    if "brid.gy" in profile_text.lower():
+        print("Follow back decision made: rejected (bridged/automated feed account)")
+        return False
     decision = generate_text(FOLLOW_BACK_SYSTEM_PROMPT, profile_text)
     print("Follow back decision made: success")
     return decision.strip().lower() == "yes"
