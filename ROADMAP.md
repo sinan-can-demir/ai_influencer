@@ -497,6 +497,36 @@ Two real bugs surfaced and fixed while building this:
   (`follow_accounts.py`, `follow_back.py`, `discover_follows.py`), not
   just this feature.
 
+**Bridged-bot rejection made deterministic (2026-09-02) — the fetch-full-
+profile fix above wasn't sufficient on its own.** A second Bridgy Fed
+bridged account (`escape.escapecollective.com.ap.brid.gy`, a cycling-news
+feed, 1816 posts/0 follows) got auto-followed despite the bio containing
+the same "bridged from... follow @ap.brid.gy to interact" text as the
+first bot — `FOLLOW_BACK_SYSTEM_PROMPT` doesn't name that pattern as a
+reject criterion and explicitly errs toward "yes" when unsure, so the
+LLM's judgment let it through. Fixed with a deterministic short-circuit
+in `should_follow_back()` (`pipeline/draft.py`): `"brid.gy" in
+profile_text.lower()` rejects before ever calling the LLM, since being
+mechanically bridged is a structural fact, not a fuzzy judgment call.
+Verified against the real bot bio (rejects, no LLM call — also saves an
+API call) and a normal bio (unaffected). Benefits both
+`follow_back.py`/`discover_follows.py` automatically. Bot unfollowed,
+verified via ground-truth `list_records`; `data/follows.jsonl`'s stale
+entries (this one plus two leftover from the first bot's cleanup)
+removed. **`log_unfollow()` still doesn't exist — this manual
+list_records-and-edit cleanup has now happened twice; build it if a
+third bad follow needs cleanup.**
+
+- [x] **Scheduled via cron (2026-09-02)** — both
+      `discover_follows.py` and `follow_back.py` now run automatically,
+      once daily at 8am (staggered before `scheduled_poster.py`'s
+      9am/5pm so nothing fires simultaneously), output redirected to
+      `logs/discover_follows.log`/`logs/follow_back.log`. Neither needs
+      a human-approval gate to run unattended (same reasoning as always:
+      following generates no public content). Verified manually first
+      (two clean runs, correctly rejecting the bridged bot and following
+      two genuine real accounts) before trusting cron with it.
+
 - [x] Pull mentions/replies via the platform API — done.
       `pipeline/notifications.py`'s `get_notifications(client)` calls
       Bluesky's notifications endpoint filtered server-side to
