@@ -48,11 +48,14 @@ if st.session_state.draft_text is not None:
             client = get_bluesky_client()
             handle, app_password = get_bluesky_account()
             login(client, handle, app_password)
-            post_draft(client, 
-                       st.session_state.draft_text, 
+            post_draft(client,
+                       st.session_state.draft_text,
                        st.session_state.image_path,
                        st.session_state.image_alt)
             st.session_state.posted = True
+            st.session_state.draft_text = None
+            st.session_state.image_path = None
+            st.session_state.image_alt = None
 
     with col2:
         if st.button("Reject / start over"):
