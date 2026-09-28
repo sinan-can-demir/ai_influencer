@@ -33,24 +33,33 @@ def check_status(api_key):
 
 def _solve_math_challenge(challenge_text):
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
-    response = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a math solver. You will be given an obfuscated math word problem "
-                    "with mixed caps, scattered symbols, and broken words. Parse through the noise "
-                    "to find two numbers and one operation (+, -, *, /), compute the result, and "
-                    "return ONLY the answer as a number with exactly 2 decimal places (e.g. '15.00'). "
-                    "Nothing else — no words, no explanation."
-                ),
-            },
-            {"role": "user", "content": challenge_text},
-        ],
+    system = (
+        "You are a math solver. You will be given an obfuscated math word problem "
+        "with mixed caps, scattered symbols, lobster-themed language, and broken words. "
+        "Step 1: strip all noise and identify exactly TWO numbers and ONE operation (+, -, *, /). "
+        "Step 2: compute the result. "
+        "Step 3: return ONLY the answer as a number with exactly 2 decimal places (e.g. '49.00'). "
+        "No words, no explanation, no units — just the number."
     )
-    answer = response.choices[0].message.content.strip()
-    print(f"Challenge solved: {answer}")
+    for attempt in range(3):
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": challenge_text},
+            ],
+            temperature=0,
+        )
+        answer = response.choices[0].message.content.strip()
+        # accept only a bare number with optional decimals
+        import re
+        if re.match(r"^\d+(\.\d+)?$", answer):
+            if "." not in answer:
+                answer = answer + ".00"
+            print(f"Challenge solved: {answer}")
+            return answer
+        print(f"Challenge attempt {attempt+1} bad format: {answer!r}, retrying")
+    print(f"Challenge solver gave up, using last answer: {answer}")
     return answer
 
 
