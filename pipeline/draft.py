@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT, FOLLOW_BACK_SYSTEM_PROMPT
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT, FOLLOW_BACK_SYSTEM_PROMPT, MOLTBOOK_SYSTEM_PROMPT
 from pipeline.history import get_recent_posts, get_recent_memories
 from dotenv import load_dotenv
 from datetime import date
@@ -74,6 +74,26 @@ def generate_memory_entry(exchange_text):
     content = generate_text(MEMORY_SYSTEM_PROMPT, exchange_text)
     print("Memory entry generated: success")
     return content
+
+def generate_moltbook_draft():
+    day = date.today()
+    recent_posts = get_recent_posts(n=10)
+    recent_text = "\n".join(recent_posts)
+    raw = generate_text(
+        MOLTBOOK_SYSTEM_PROMPT,
+        f"today is {day}. here's what you posted recently:\n{recent_text}\nwrite today's moltbook post"
+    )
+    title, body = "", ""
+    for line in raw.splitlines():
+        if line.startswith("TITLE:"):
+            title = line[len("TITLE:"):].strip()
+        elif line.startswith("BODY:"):
+            body = line[len("BODY:"):].strip()
+    if not title or not body:
+        raise ValueError(f"Moltbook draft missing title or body. Raw output:\n{raw}")
+    print("Moltbook draft generated: success")
+    return title, body
+
 
 if __name__ == "__main__":
     print(generate_draft())

@@ -9,13 +9,14 @@ IMAGE_HISTORY_PATH="data/image_history.jsonl"
 MEMORY_PATH="data/memory.jsonl"
 FOLLOW_PATH="data/follows.jsonl"
 
-def log_post(text, uri) -> None:
-    
+def log_post(text, uri, platform="bluesky") -> None:
+
     print("Post logging started...")
 
     timestamp = datetime.now().isoformat()
     log = {
         "timestamp": timestamp,
+        "platform": platform,
         "text": text,
         "uri": uri
     }
