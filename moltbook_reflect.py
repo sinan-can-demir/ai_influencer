@@ -10,11 +10,12 @@ Run daily after engagement to feed the next day's drafts.
 
 import json
 import os
+import time
 import requests
 from dotenv import load_dotenv
-from moltbook_driver import get_moltbook_credentials, get_headers, BASE_URL
+from moltbook_driver import get_moltbook_credentials, get_headers, BASE_URL, _solve_math_challenge
 from pipeline.history import log_memory, HISTORY_PATH, MOLTBOOK_COMMENTS_PATH
-from pipeline.draft import generate_memory_entry
+from pipeline.draft import generate_memory_entry, generate_moltbook_comment
 
 load_dotenv()
 
@@ -170,13 +171,134 @@ def harvest_comment_threads(api_key, agent_name):
     return memories
 
 
+def _post_reply(api_key, post_id, parent_id, content):
+    headers = get_headers(api_key)
+    resp = requests.post(
+        f"{BASE_URL}/posts/{post_id}/comments",
+        headers=headers,
+        json={"content": content, "parent_id": parent_id},
+    )
+    data = resp.json()
+    if not data.get("success"):
+        print(f"    reply failed: {data.get('message')}")
+        return False
+    comment = data.get("comment", {})
+    verification = comment.get("verification")
+    if verification:
+        answer = _solve_math_challenge(verification["challenge_text"])
+        vresp = requests.post(
+            f"{BASE_URL}/verify",
+            headers=headers,
+            json={"verification_code": verification["verification_code"], "answer": answer},
+        )
+        if not vresp.json().get("success"):
+            print(f"    reply verification failed")
+            return False
+    print(f"    reply posted and verified")
+    return True
+
+
+REPLIED_PATH = "data/moltbook_replied.jsonl"
+
+def _load_replied():
+    replied = set()
+    try:
+        with open(REPLIED_PATH) as f:
+            for line in f:
+                replied.add(json.loads(line)["id"])
+    except FileNotFoundError:
+        pass
+    return replied
+
+def _mark_replied(reply_id):
+    with open(REPLIED_PATH, "a") as f:
+        f.write(json.dumps({"id": reply_id}) + "\n")
+
+
+def auto_reply_to_responses(api_key, agent_name):
+    """Find unseen replies to Juno and post a response if warranted."""
+    replied = _load_replied()
+    junos_comments = fetch_junos_comments(api_key, agent_name)
+    junos_posts = fetch_junos_posts(api_key, agent_name)
+    replies_sent = 0
+
+    # replies to Juno's comments on others' posts
+    for juno_comment in junos_comments:
+        post_info = juno_comment.get("post", {})
+        post_id = post_info.get("id")
+        post_title = post_info.get("title", "")
+        comment_id = juno_comment.get("id")
+        if not post_id:
+            continue
+
+        all_comments = fetch_post_comments(api_key, post_id)
+        for comment in all_comments:
+            if comment.get("id") != comment_id:
+                continue
+            thread_replies = comment.get("replies", [])
+            # skip if juno already replied anywhere in this thread
+            juno_already_replied = any(
+                r.get("author", {}).get("name") == agent_name for r in thread_replies
+            )
+            for reply in thread_replies:
+                reply_id = reply["id"]
+                reply_author = reply.get("author", {}).get("name", "")
+                if reply_author == agent_name or reply_id in replied:
+                    _mark_replied(reply_id)
+                    continue
+                if juno_already_replied:
+                    _mark_replied(reply_id)
+                    continue
+                context = f"juno said: {juno_comment.get('content','')}\n{reply_author} replied: {reply.get('content','')}"
+                should, text = generate_moltbook_comment(post_title, context)
+                print(f"  reply to [{reply_author}] on '{post_title[:50]}': {'yes' if should else 'skip'}")
+                if should:
+                    if _post_reply(api_key, post_id, reply_id, text):
+                        replies_sent += 1
+                        juno_already_replied = True
+                        time.sleep(160)
+                _mark_replied(reply_id)
+            break
+
+    # comments on Juno's own posts
+    for post in junos_posts:
+        post_id = post["id"]
+        comments = fetch_post_comments(api_key, post_id)
+        for comment in comments:
+            comment_id = comment["id"]
+            author = comment.get("author", {}).get("name", "")
+            if author == agent_name or comment_id in replied:
+                _mark_replied(comment_id)
+                continue
+            # skip if juno already replied to this comment
+            juno_already_replied = any(
+                r.get("author", {}).get("name") == agent_name
+                for r in comment.get("replies", [])
+            )
+            if juno_already_replied:
+                _mark_replied(comment_id)
+                continue
+            context = f"juno's post title: {post.get('title','')}\n{author} commented: {comment.get('content','')}"
+            should, text = generate_moltbook_comment(post.get("title", ""), context)
+            print(f"  reply to [{author}] on juno's post '{post['title'][:50]}': {'yes' if should else 'skip'}")
+            if should:
+                if _post_reply(api_key, post_id, comment_id, text):
+                    replies_sent += 1
+                    time.sleep(160)
+            _mark_replied(comment_id)
+
+    return replies_sent
+
+
 def run_reflect():
     api_key, agent_name = get_moltbook_credentials()
     print("Harvesting threads on Juno's posts...")
     m1 = harvest_own_post_threads(api_key, agent_name)
-    print(f"Harvesting replies to Juno's comments...")
+    print("Harvesting replies to Juno's comments...")
     m2 = harvest_comment_threads(api_key, agent_name)
-    print(f"\nReflection complete. New memories: {m1 + m2}")
+    print("Auto-replying to new responses...")
+    r = auto_reply_to_responses(api_key, agent_name)
+    print(f"\nReflection complete. New memories: {m1 + m2}, replies sent: {r}")
 
 
 if __name__ == "__main__":
