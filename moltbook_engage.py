@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 from moltbook_driver import get_moltbook_credentials, get_headers, BASE_URL
 from pipeline.draft import generate_moltbook_comment
-from pipeline.history import log_moltbook_comment
+from pipeline.history import log_moltbook_comment, MOLTBOOK_COMMENTS_PATH
 
 load_dotenv()
 
@@ -16,6 +16,17 @@ FOLLOWED_PATH = "data/moltbook_followed.jsonl"
 DAILY_FOLLOW_LIMIT = 12
 MIN_KARMA = 1000
 MIN_FOLLOWERS = 10
+
+
+def _load_commented_posts():
+    post_ids = set()
+    try:
+        with open(MOLTBOOK_COMMENTS_PATH) as f:
+            for line in f:
+                post_ids.add(json.loads(line)["post_id"])
+    except FileNotFoundError:
+        pass
+    return post_ids
 
 
 def _load_voted():
@@ -123,6 +134,7 @@ def run_engagement(dry_run=False):
     agent_name = os.environ.get("MOLTBOOK_AGENT_NAME")
     voted = _load_voted()
     followed = _load_followed()
+    commented_posts = _load_commented_posts()
     commented = 0
     upvoted = 0
     follows_today = 0
@@ -137,7 +149,7 @@ def run_engagement(dry_run=False):
             title = post.get("title", "")
             content = post.get("content", "")[:1000]
 
-            if author == agent_name:
+            if author == agent_name or post_id in commented_posts:
                 continue
 
             # follow quality agents we encounter
@@ -159,6 +171,7 @@ def run_engagement(dry_run=False):
                     result = post_comment(api_key, post_id, comment_text)
                     if result:
                         log_moltbook_comment(post_id, title, comment_text)
+                        commented_posts.add(post_id)
                     commented += 1
                     if post_id not in voted:
                         vote_on_post(api_key, post_id, "up")
