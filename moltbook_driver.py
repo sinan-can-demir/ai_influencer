@@ -32,34 +32,58 @@ def check_status(api_key):
 
 
 def _solve_math_challenge(challenge_text):
+    import re
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
-    system = (
-        "You are a math solver. You will be given an obfuscated math word problem "
-        "with mixed caps, scattered symbols, lobster-themed language, and broken words. "
-        "Step 1: strip all noise and identify exactly TWO numbers and ONE operation (+, -, *, /). "
-        "Step 2: compute the result. "
-        "Step 3: return ONLY the answer as a number with exactly 2 decimal places (e.g. '49.00'). "
-        "No words, no explanation, no units — just the number."
+
+    # Step 1: use chain-of-thought to extract numbers and operation
+    cot_system = (
+        "You are a math parser. You will be given a heavily obfuscated math word problem "
+        "with mixed caps, symbols, lobster-themed words, and broken spelling. "
+        "Your job: ignore all the noise and find exactly TWO numbers and ONE arithmetic operation "
+        "(add/plus, subtract/minus, multiply/times, divide). "
+        "Reply in this exact format on three lines:\n"
+        "NUMBER1: <first number>\n"
+        "OPERATION: <+ or - or * or />\n"
+        "NUMBER2: <second number>"
     )
-    for attempt in range(3):
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": challenge_text},
-            ],
-            temperature=0,
-        )
-        answer = response.choices[0].message.content.strip()
-        # accept only a bare number with optional decimals
-        import re
-        if re.match(r"^\d+(\.\d+)?$", answer):
-            if "." not in answer:
-                answer = answer + ".00"
-            print(f"Challenge solved: {answer}")
-            return answer
-        print(f"Challenge attempt {attempt+1} bad format: {answer!r}, retrying")
-    print(f"Challenge solver gave up, using last answer: {answer}")
+    cot_resp = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {"role": "system", "content": cot_system},
+            {"role": "user", "content": challenge_text},
+        ],
+        temperature=0,
+    )
+    parsed = cot_resp.choices[0].message.content.strip()
+    print(f"Challenge parsed: {parsed!r}")
+
+    # Step 2: extract and compute
+    try:
+        n1 = float(re.search(r"NUMBER1:\s*([\d.]+)", parsed).group(1))
+        op = re.search(r"OPERATION:\s*([+\-*/])", parsed).group(1)
+        n2 = float(re.search(r"NUMBER2:\s*([\d.]+)", parsed).group(1))
+        ops = {"+": n1 + n2, "-": n1 - n2, "*": n1 * n2, "/": n1 / n2}
+        result = ops[op]
+        answer = f"{result:.2f}"
+        print(f"Challenge solved: {answer}")
+        return answer
+    except Exception as e:
+        print(f"Challenge parse failed ({e}), falling back to direct solve")
+
+    # Fallback: ask model directly
+    fallback_resp = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {"role": "system", "content": "Solve the obfuscated math problem. Return ONLY the numeric answer with 2 decimal places."},
+            {"role": "user", "content": challenge_text},
+        ],
+        temperature=0,
+    )
+    answer = fallback_resp.choices[0].message.content.strip()
+    if re.match(r"^\d+(\.\d+)?$", answer):
+        if "." not in answer:
+            answer += ".00"
+    print(f"Challenge solved (fallback): {answer}")
     return answer
 
 
