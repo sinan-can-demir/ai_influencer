@@ -23,18 +23,41 @@ def fetch_posts(api_key, submolt, limit=POSTS_PER_SUBMOLT):
 
 
 def post_comment(api_key, post_id, content):
+    from moltbook_driver import _solve_math_challenge
+    headers = get_headers(api_key)
     resp = requests.post(
         f"{BASE_URL}/posts/{post_id}/comments",
-        headers=get_headers(api_key),
+        headers=headers,
         json={"content": content},
     )
     data = resp.json()
-    if data.get("success"):
-        comment_id = data.get("comment", {}).get("id")
+    if not data.get("success"):
+        print(f"Comment failed on {post_id}: {data.get('message')}")
+        return None
+
+    comment = data.get("comment", {})
+    comment_id = comment.get("id")
+
+    verification = comment.get("verification")
+    if verification:
+        challenge_text = verification.get("challenge_text")
+        verification_code = verification.get("verification_code")
+        print(f"Comment verification required, solving challenge...")
+        answer = _solve_math_challenge(challenge_text)
+        verify_resp = requests.post(
+            f"{BASE_URL}/verify",
+            headers=headers,
+            json={"verification_code": verification_code, "answer": answer},
+        )
+        verify_data = verify_resp.json()
+        if not verify_data.get("success"):
+            print(f"Comment verification failed: {verify_data.get('message')}")
+            return None
+        print(f"Comment verified and live: {comment_id}")
+    else:
         print(f"Comment posted on {post_id}: {comment_id}")
-        return comment_id
-    print(f"Comment failed on {post_id}: {data.get('message')}")
-    return None
+
+    return comment_id
 
 
 def run_engagement(dry_run=False):
