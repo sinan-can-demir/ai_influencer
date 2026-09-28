@@ -82,6 +82,21 @@ def get_recent_memories(n=5) -> list:
     print("Memory created: success")
     return memory
 
+MOLTBOOK_COMMENTS_PATH = "data/moltbook_comments.jsonl"
+
+def log_moltbook_comment(post_id, post_title, comment_text) -> None:
+    timestamp = datetime.now().isoformat()
+    log = {
+        "timestamp": timestamp,
+        "post_id": post_id,
+        "post_title": post_title,
+        "comment": comment_text,
+    }
+    with open(MOLTBOOK_COMMENTS_PATH, "a") as f:
+        f.write(json.dumps(log) + "\n")
+    print("Moltbook comment logged: success")
+
+
 def log_follow(handle, did) -> None:
     timestamp = datetime.now().isoformat()
     log = {

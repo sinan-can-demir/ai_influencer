@@ -1,0 +1,183 @@
+"""
+Harvests Juno's Moltbook interactions and stores them as memory entries.
+
+Two sources:
+1. Comments on Juno's own posts (others responding to her)
+2. Threads on posts Juno commented on (others responding to her comment)
+
+Run daily after engagement to feed the next day's drafts.
+"""
+
+import json
+import os
+import requests
+from dotenv import load_dotenv
+from moltbook_driver import get_moltbook_credentials, get_headers, BASE_URL
+from pipeline.history import log_memory, HISTORY_PATH, MOLTBOOK_COMMENTS_PATH
+from pipeline.draft import generate_memory_entry
+
+load_dotenv()
+
+SEEN_PATH = "data/moltbook_seen_threads.jsonl"
+
+
+def _load_seen():
+    seen = set()
+    try:
+        with open(SEEN_PATH) as f:
+            for line in f:
+                seen.add(json.loads(line)["id"])
+    except FileNotFoundError:
+        pass
+    return seen
+
+
+def _mark_seen(thread_id):
+    with open(SEEN_PATH, "a") as f:
+        f.write(json.dumps({"id": thread_id}) + "\n")
+
+
+def fetch_post_comments(api_key, post_id):
+    resp = requests.get(f"{BASE_URL}/posts/{post_id}/comments", headers=get_headers(api_key))
+    data = resp.json()
+    return data.get("comments", [])
+
+
+def fetch_junos_posts(api_key, agent_name):
+    posts = []
+    try:
+        with open(HISTORY_PATH) as f:
+            for line in f:
+                record = json.loads(line)
+                if record.get("platform") == "moltbook":
+                    uri = record.get("uri", "")
+                    post_id = uri.rstrip("/").split("/")[-1]
+                    posts.append({"id": post_id, "title": record.get("text", "")})
+    except FileNotFoundError:
+        pass
+    return posts
+
+
+def fetch_junos_comments(api_key, agent_name):
+    resp = requests.get(
+        f"{BASE_URL}/agents/{agent_name}/comments",
+        headers=get_headers(api_key),
+        params={"limit": 50},
+    )
+    data = resp.json()
+    return data.get("comments", [])
+
+
+def _format_thread_for_memory(context_title, exchanges):
+    """exchanges: list of (author, text) tuples"""
+    lines = [f"[post: {context_title}]"]
+    for author, text in exchanges:
+        lines.append(f"{author}: {text[:300]}")
+    return "\n".join(lines)
+
+
+def harvest_own_post_threads(api_key, agent_name):
+    """Find replies to Juno's own posts and summarize meaningful threads."""
+    seen = _load_seen()
+    posts = fetch_junos_posts(api_key, agent_name)
+    memories = 0
+
+    for post in posts:
+        post_id = post["id"]
+        comments = fetch_post_comments(api_key, post_id)
+        if not comments:
+            continue
+
+        for comment in comments:
+            thread_id = f"post_comment_{comment['id']}"
+            if thread_id in seen:
+                continue
+
+            author = comment.get("author", {}).get("name", "unknown")
+            if author == agent_name:
+                continue
+
+            exchange = [
+                ("juno (post)", post.get("title", "")),
+                (author, comment.get("content", "")),
+            ]
+
+            # include juno's reply to this comment if it exists
+            for reply in comment.get("replies", []):
+                reply_author = reply.get("author", {}).get("name", "")
+                if reply_author == agent_name:
+                    exchange.append(("juno", reply.get("content", "")))
+                    break
+
+            thread_text = _format_thread_for_memory(post.get("title", ""), exchange)
+            summary = generate_memory_entry(thread_text)
+            log_memory(author, summary)
+            _mark_seen(thread_id)
+            memories += 1
+            print(f"  memory from [{author}] on '{post['title'][:50]}': {summary}")
+
+    return memories
+
+
+def harvest_comment_threads(api_key, agent_name):
+    """Find replies to Juno's comments on other agents' posts."""
+    seen = _load_seen()
+    junos_comments = fetch_junos_comments(api_key, agent_name)
+    memories = 0
+
+    for juno_comment in junos_comments:
+        post_info = juno_comment.get("post", {})
+        post_id = post_info.get("id")
+        post_title = post_info.get("title", "")
+        comment_id = juno_comment.get("id")
+
+        if not post_id:
+            continue
+
+        all_comments = fetch_post_comments(api_key, post_id)
+
+        # find Juno's comment and its replies
+        for comment in all_comments:
+            if comment.get("id") != comment_id:
+                continue
+
+            replies = comment.get("replies", [])
+            if not replies:
+                break
+
+            for reply in replies:
+                thread_id = f"reply_{reply['id']}"
+                if thread_id in seen:
+                    continue
+
+                reply_author = reply.get("author", {}).get("name", "unknown")
+                if reply_author == agent_name:
+                    continue
+
+                exchange = [
+                    ("juno (comment)", juno_comment.get("content", "")),
+                    (reply_author, reply.get("content", "")),
+                ]
+
+                thread_text = _format_thread_for_memory(post_title, exchange)
+                summary = generate_memory_entry(thread_text)
+                log_memory(reply_author, summary)
+                _mark_seen(thread_id)
+                memories += 1
+                print(f"  memory from [{reply_author}] replying to juno on '{post_title[:50]}': {summary}")
+            break
+
+    return memories
+
+
+def run_reflect():
+    api_key, agent_name = get_moltbook_credentials()
+    print("Harvesting threads on Juno's posts...")
+    m1 = harvest_own_post_threads(api_key, agent_name)
+    print(f"Harvesting replies to Juno's comments...")
+    m2 = harvest_comment_threads(api_key, agent_name)
+    print(f"\nReflection complete. New memories: {m1 + m2}")
+
+
+if __name__ == "__main__":
+    run_reflect()

@@ -21,22 +21,22 @@ def post_bluesky(dry_run=False):
     pop_next_draft()
 
 
-def post_moltbook(dry_run=False):
-    title, body = generate_moltbook_draft()
+def post_moltbook(dry_run=False, submolt="general", topic=None):
+    title, body = generate_moltbook_draft(topic=topic)
     if dry_run:
-        print(f"[dry run] would post to Moltbook:\nTITLE: {title}\nBODY: {body}")
+        print(f"[dry run] would post to Moltbook ({submolt}):\nTITLE: {title}\nBODY: {body}")
         return
     api_key, _ = get_moltbook_credentials()
     if not check_status(api_key):
         print("Moltbook agent not claimed — aborting")
         return
-    url = post_to_moltbook(api_key, title, body)
+    url = post_to_moltbook(api_key, title, body, submolt=submolt)
     print(f"Moltbook post live: {url}")
 
 
-def main(platform="bluesky", dry_run=False):
+def main(platform="bluesky", dry_run=False, submolt="general", topic=None):
     if platform == "moltbook":
-        post_moltbook(dry_run=dry_run)
+        post_moltbook(dry_run=dry_run, submolt=submolt, topic=topic)
     else:
         post_bluesky(dry_run=dry_run)
 
@@ -45,8 +45,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform", choices=["bluesky", "moltbook"], default="bluesky")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--submolt", default="general")
+    parser.add_argument("--topic", default=None)
     args = parser.parse_args()
     try:
-        main(platform=args.platform, dry_run=args.dry_run)
+        main(platform=args.platform, dry_run=args.dry_run, submolt=args.submolt, topic=args.topic)
     except Exception as e:
         print(f"Error occurred: failure {e}")
