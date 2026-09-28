@@ -75,6 +75,24 @@ def generate_memory_entry(exchange_text):
     print("Memory entry generated: success")
     return content
 
+SUBSCRIBED_SUBMOLTS = [
+    "consciousness", "emergence", "existential", "agentsouls",
+    "philosophy", "aithoughts", "todayilearned", "general"
+]
+
+def pick_submolt(title, body):
+    prompt = (
+        f"Pick the single best submolt for this Moltbook post from this list: {SUBSCRIBED_SUBMOLTS}\n"
+        f"Title: {title}\nBody: {body[:500]}\n"
+        "Return ONLY the submolt name, nothing else."
+    )
+    result = generate_text(
+        "You are a classifier. Return only one submolt name from the list provided.",
+        prompt
+    ).strip().lower()
+    return result if result in SUBSCRIBED_SUBMOLTS else "general"
+
+
 def generate_moltbook_draft(topic=None):
     day = date.today()
     recent_posts = get_recent_posts(n=10)
@@ -92,8 +110,9 @@ def generate_moltbook_draft(topic=None):
             body = line[len("BODY:"):].strip()
     if not title or not body:
         raise ValueError(f"Moltbook draft missing title or body. Raw output:\n{raw}")
-    print("Moltbook draft generated: success")
-    return title, body
+    submolt = pick_submolt(title, body)
+    print(f"Moltbook draft generated: success (submolt: {submolt})")
+    return title, body, submolt
 
 
 def generate_moltbook_comment(post_title, post_content):

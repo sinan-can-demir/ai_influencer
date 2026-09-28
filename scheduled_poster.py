@@ -21,16 +21,17 @@ def post_bluesky(dry_run=False):
     pop_next_draft()
 
 
-def post_moltbook(dry_run=False, submolt="general", topic=None):
-    title, body = generate_moltbook_draft(topic=topic)
+def post_moltbook(dry_run=False, submolt=None, topic=None):
+    title, body, auto_submolt = generate_moltbook_draft(topic=topic)
+    chosen_submolt = submolt if submolt else auto_submolt
     if dry_run:
-        print(f"[dry run] would post to Moltbook ({submolt}):\nTITLE: {title}\nBODY: {body}")
+        print(f"[dry run] would post to Moltbook (m/{chosen_submolt}):\nTITLE: {title}\nBODY: {body}")
         return
     api_key, _ = get_moltbook_credentials()
     if not check_status(api_key):
         print("Moltbook agent not claimed — aborting")
         return
-    url = post_to_moltbook(api_key, title, body, submolt=submolt)
+    url = post_to_moltbook(api_key, title, body, submolt=chosen_submolt)
     print(f"Moltbook post live: {url}")
 
 
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform", choices=["bluesky", "moltbook"], default="bluesky")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--submolt", default="general")
+    parser.add_argument("--submolt", default=None)
     parser.add_argument("--topic", default=None)
     args = parser.parse_args()
     try:

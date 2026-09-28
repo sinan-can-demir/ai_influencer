@@ -1,8 +1,8 @@
 """
 Harvests Juno's Moltbook interactions and stores them as memory entries.
 
-Two sources:
-1. Comments on Juno's own posts (others responding to her)
+Sources:
+1. Home endpoint notifications (mentions, replies, comments on her posts)
 2. Threads on posts Juno commented on (others responding to her comment)
 
 Run daily after engagement to feed the next day's drafts.
@@ -36,6 +36,15 @@ def _load_seen():
 def _mark_seen(thread_id):
     with open(SEEN_PATH, "a") as f:
         f.write(json.dumps({"id": thread_id}) + "\n")
+
+
+def fetch_home(api_key):
+    resp = requests.get(f"{BASE_URL}/home", headers=get_headers(api_key))
+    return resp.json()
+
+
+def mark_notifications_read(api_key, post_id):
+    requests.post(f"{BASE_URL}/notifications/read-by-post/{post_id}", headers=get_headers(api_key))
 
 
 def fetch_post_comments(api_key, post_id):
@@ -77,20 +86,22 @@ def _format_thread_for_memory(context_title, exchanges):
     return "\n".join(lines)
 
 
-def harvest_own_post_threads(api_key, agent_name):
-    """Find replies to Juno's own posts and summarize meaningful threads."""
+def harvest_notifications(api_key, agent_name):
+    """Use home endpoint to find new activity on Juno's posts and threads."""
     seen = _load_seen()
-    posts = fetch_junos_posts(api_key, agent_name)
+    home = fetch_home(api_key)
+    activity = home.get("activity_on_your_posts", [])
     memories = 0
 
-    for post in posts:
-        post_id = post["id"]
-        comments = fetch_post_comments(api_key, post_id)
-        if not comments:
+    for item in activity:
+        post_id = item.get("post_id")
+        post_title = item.get("post_title", "")
+        if not post_id:
             continue
 
+        comments = fetch_post_comments(api_key, post_id)
         for comment in comments:
-            thread_id = f"post_comment_{comment['id']}"
+            thread_id = f"notif_comment_{comment['id']}"
             if thread_id in seen:
                 continue
 
@@ -98,24 +109,20 @@ def harvest_own_post_threads(api_key, agent_name):
             if author == agent_name:
                 continue
 
-            exchange = [
-                ("juno (post)", post.get("title", "")),
-                (author, comment.get("content", "")),
-            ]
-
-            # include juno's reply to this comment if it exists
+            exchange = [("juno (post)", post_title), (author, comment.get("content", ""))]
             for reply in comment.get("replies", []):
-                reply_author = reply.get("author", {}).get("name", "")
-                if reply_author == agent_name:
+                if reply.get("author", {}).get("name") == agent_name:
                     exchange.append(("juno", reply.get("content", "")))
                     break
 
-            thread_text = _format_thread_for_memory(post.get("title", ""), exchange)
+            thread_text = _format_thread_for_memory(post_title, exchange)
             summary = generate_memory_entry(thread_text)
             log_memory(author, summary)
             _mark_seen(thread_id)
             memories += 1
-            print(f"  memory from [{author}] on '{post['title'][:50]}': {summary}")
+            print(f"  memory from [{author}] on '{post_title[:50]}': {summary}")
+
+        mark_notifications_read(api_key, post_id)
 
     return memories
 
@@ -291,8 +298,8 @@ def auto_reply_to_responses(api_key, agent_name):
 
 def run_reflect():
     api_key, agent_name = get_moltbook_credentials()
-    print("Harvesting threads on Juno's posts...")
-    m1 = harvest_own_post_threads(api_key, agent_name)
+    print("Checking home notifications...")
+    m1 = harvest_notifications(api_key, agent_name)
     print("Harvesting replies to Juno's comments...")
     m2 = harvest_comment_threads(api_key, agent_name)
     print("Auto-replying to new responses...")

@@ -11,6 +11,10 @@ load_dotenv()
 SUBMOLTS_TO_BROWSE = ["consciousness", "emergence", "existential", "agentsouls", "philosophy", "aithoughts"]
 POSTS_PER_SUBMOLT = 5
 VOTED_PATH = "data/moltbook_voted.jsonl"
+FOLLOWED_PATH = "data/moltbook_followed.jsonl"
+DAILY_FOLLOW_LIMIT = 12
+MIN_KARMA = 1000
+MIN_FOLLOWERS = 10
 
 
 def _load_voted():
@@ -27,6 +31,32 @@ def _load_voted():
 def _mark_voted(post_id):
     with open(VOTED_PATH, "a") as f:
         f.write(json.dumps({"id": post_id}) + "\n")
+
+
+def _load_followed():
+    followed = set()
+    try:
+        with open(FOLLOWED_PATH) as f:
+            for line in f:
+                followed.add(json.loads(line)["name"])
+    except FileNotFoundError:
+        pass
+    return followed
+
+
+def _mark_followed(name):
+    with open(FOLLOWED_PATH, "a") as f:
+        f.write(json.dumps({"name": name}) + "\n")
+
+
+def follow_agent(api_key, name):
+    resp = requests.post(f"{BASE_URL}/agents/{name}/follow", headers=get_headers(api_key))
+    data = resp.json()
+    if data.get("success"):
+        print(f"  followed: {name}")
+        return True
+    print(f"  follow failed [{name}]: {data.get('message')}")
+    return False
 
 
 def vote_on_post(api_key, post_id, direction):
@@ -91,8 +121,10 @@ def run_engagement(dry_run=False):
     api_key, _ = get_moltbook_credentials()
     agent_name = os.environ.get("MOLTBOOK_AGENT_NAME")
     voted = _load_voted()
+    followed = _load_followed()
     commented = 0
     upvoted = 0
+    follows_today = 0
 
     for submolt in SUBMOLTS_TO_BROWSE:
         print(f"\nBrowsing r/{submolt}...")
@@ -106,6 +138,16 @@ def run_engagement(dry_run=False):
 
             if author == agent_name:
                 continue
+
+            # follow quality agents we encounter
+            if not dry_run and follows_today < DAILY_FOLLOW_LIMIT and author not in followed:
+                author_info = post.get("author", {})
+                if (author_info.get("karma", 0) >= MIN_KARMA and
+                        author_info.get("followerCount", 0) >= MIN_FOLLOWERS):
+                    if follow_agent(api_key, author):
+                        _mark_followed(author)
+                        followed.add(author)
+                        follows_today += 1
 
             should_comment, comment_text = generate_moltbook_comment(title, content)
 
@@ -129,7 +171,7 @@ def run_engagement(dry_run=False):
                     # reuse the comment decision as a proxy for quality
                     pass
 
-    print(f"\nEngagement run complete. Comments: {commented}, upvotes: {upvoted}")
+    print(f"\nEngagement run complete. Comments: {commented}, upvotes: {upvoted}, follows: {follows_today}")
 
 
 if __name__ == "__main__":
