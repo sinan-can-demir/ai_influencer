@@ -235,18 +235,18 @@ def auto_reply_to_responses(api_key, agent_name):
         for comment in all_comments:
             if comment.get("id") != comment_id:
                 continue
-            thread_replies = comment.get("replies", [])
-            # skip if juno already replied anywhere in this thread
-            juno_already_replied = any(
-                r.get("author", {}).get("name") == agent_name for r in thread_replies
-            )
-            for reply in thread_replies:
+            for reply in comment.get("replies", []):
                 reply_id = reply["id"]
                 reply_author = reply.get("author", {}).get("name", "")
                 if reply_author == agent_name or reply_id in replied:
                     _mark_replied(reply_id)
                     continue
-                if juno_already_replied:
+                # skip if juno already replied to THIS specific reply
+                juno_already_replied_here = any(
+                    r.get("author", {}).get("name") == agent_name
+                    for r in reply.get("replies", [])
+                )
+                if juno_already_replied_here:
                     _mark_replied(reply_id)
                     continue
                 context = f"juno said: {juno_comment.get('content','')}\n{reply_author} replied: {reply.get('content','')}"
@@ -255,7 +255,6 @@ def auto_reply_to_responses(api_key, agent_name):
                 if should:
                     if _post_reply(api_key, post_id, reply_id, text):
                         replies_sent += 1
-                        juno_already_replied = True
                         time.sleep(160)
                 _mark_replied(reply_id)
             break
