@@ -169,9 +169,8 @@ def run_engagement(dry_run=False):
                 print(f"  → {comment_text}")
                 if not dry_run:
                     result = post_comment(api_key, post_id, comment_text)
-                    if result:
-                        log_moltbook_comment(post_id, title, comment_text)
-                        commented_posts.add(post_id)
+                    log_moltbook_comment(post_id, title, comment_text)
+                    commented_posts.add(post_id)
                     commented += 1
                     if post_id not in voted:
                         vote_on_post(api_key, post_id, "up")

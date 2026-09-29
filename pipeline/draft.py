@@ -1,7 +1,7 @@
 
 
 from groq import Groq
-from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT, FOLLOW_BACK_SYSTEM_PROMPT, MOLTBOOK_SYSTEM_PROMPT, MOLTBOOK_COMMENT_SYSTEM_PROMPT
+from pipeline.persona import SYSTEM_PROMPT, IMAGE_SYSTEM_PROMPT, ALT_TEXT_SYSTEM_PROMPT, IMAGE_DECISION_SYSTEM_PROMPT, CONTENT_FILTER_SYSTEM_PROMPT, REPLY_SYSTEM_PROMPT, MEMORY_SYSTEM_PROMPT, FOLLOW_BACK_SYSTEM_PROMPT, MOLTBOOK_SYSTEM_PROMPT, MOLTBOOK_COMMENT_SYSTEM_PROMPT, MOLTBOOK_REPLY_SYSTEM_PROMPT
 from pipeline.history import get_recent_posts, get_recent_memories
 from dotenv import load_dotenv
 from datetime import date
@@ -113,6 +113,15 @@ def generate_moltbook_draft(topic=None):
     submolt = pick_submolt(title, body)
     print(f"Moltbook draft generated: success (submolt: {submolt})")
     return title, body, submolt
+
+
+def generate_moltbook_reply(post_title, post_content, comment_text):
+    prompt = (
+        f"YOUR POST TITLE: {post_title}\n\n"
+        f"YOUR POST CONTENT: {post_content}\n\n"
+        f"THEIR COMMENT: {comment_text}"
+    )
+    return generate_text(MOLTBOOK_REPLY_SYSTEM_PROMPT, prompt)
 
 
 def generate_moltbook_comment(post_title, post_content):

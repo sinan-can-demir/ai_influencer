@@ -83,6 +83,7 @@ def get_recent_memories(n=5) -> list:
     return memory
 
 MOLTBOOK_COMMENTS_PATH = "data/moltbook_comments.jsonl"
+MOLTBOOK_REPLIED_PATH = "data/moltbook_replied.jsonl"
 
 def log_moltbook_comment(post_id, post_title, comment_text) -> None:
     timestamp = datetime.now().isoformat()
@@ -95,6 +96,25 @@ def log_moltbook_comment(post_id, post_title, comment_text) -> None:
     with open(MOLTBOOK_COMMENTS_PATH, "a") as f:
         f.write(json.dumps(log) + "\n")
     print("Moltbook comment logged: success")
+
+
+def load_replied_comment_ids() -> set:
+    ids = set()
+    try:
+        with open(MOLTBOOK_REPLIED_PATH) as f:
+            for line in f:
+                ids.add(json.loads(line)["id"])
+    except FileNotFoundError:
+        pass
+    return ids
+
+
+def log_moltbook_reply(comment_id, reply_text) -> None:
+    timestamp = datetime.now().isoformat()
+    log = {"timestamp": timestamp, "id": comment_id, "reply": reply_text}
+    with open(MOLTBOOK_REPLIED_PATH, "a") as f:
+        f.write(json.dumps(log) + "\n")
+    print("Moltbook reply logged: success")
 
 
 def log_follow(handle, did) -> None:

@@ -39,7 +39,7 @@ def _mark_seen(thread_id):
 
 
 def fetch_home(api_key):
-    resp = requests.get(f"{BASE_URL}/home", headers=get_headers(api_key))
+    resp = requests.get(f"{BASE_URL}/home", headers=get_headers(api_key), timeout=30)
     return resp.json()
 
 
@@ -47,10 +47,18 @@ def mark_notifications_read(api_key, post_id):
     requests.post(f"{BASE_URL}/notifications/read-by-post/{post_id}", headers=get_headers(api_key))
 
 
-def fetch_post_comments(api_key, post_id):
-    resp = requests.get(f"{BASE_URL}/posts/{post_id}/comments", headers=get_headers(api_key))
-    data = resp.json()
-    return data.get("comments", [])
+def fetch_post_comments(api_key, post_id, retries=3):
+    for attempt in range(retries):
+        try:
+            resp = requests.get(f"{BASE_URL}/posts/{post_id}/comments", headers=get_headers(api_key), timeout=30)
+            return resp.json().get("comments", [])
+        except Exception as e:
+            if attempt < retries - 1:
+                print(f"  fetch_post_comments retry {attempt + 1}: {e}")
+                time.sleep(10)
+            else:
+                print(f"  fetch_post_comments failed after {retries} attempts: {e}")
+                return []
 
 
 def fetch_junos_posts(api_key, agent_name):
@@ -73,6 +81,7 @@ def fetch_junos_comments(api_key, agent_name):
         f"{BASE_URL}/agents/{agent_name}/comments",
         headers=get_headers(api_key),
         params={"limit": 50},
+        timeout=30,
     )
     data = resp.json()
     return data.get("comments", [])
@@ -121,6 +130,7 @@ def harvest_notifications(api_key, agent_name):
             _mark_seen(thread_id)
             memories += 1
             print(f"  memory from [{author}] on '{post_title[:50]}': {summary}")
+            time.sleep(15)
 
         mark_notifications_read(api_key, post_id)
 
@@ -173,6 +183,7 @@ def harvest_comment_threads(api_key, agent_name):
                 _mark_seen(thread_id)
                 memories += 1
                 print(f"  memory from [{reply_author}] replying to juno on '{post_title[:50]}': {summary}")
+                time.sleep(15)
             break
 
     return memories
