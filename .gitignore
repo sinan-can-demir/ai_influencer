@@ -11,3 +11,6 @@ venv/
 
 # Cron output, not tracked data
 logs/
+
+# Juno's operational data — kept locally, not public
+data/*.jsonl
